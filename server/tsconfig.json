@@ -1,0 +1,17 @@
+{
+  "extends": [ "@tsconfig/bun" ],
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@common/*": ["../common/*"],
+      "@common-server": ["../common-server"],
+      "@common-server/*": ["../common-server/*"],
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "../common/**/*",
+    "../common-server/**/*",
+    "**/*"
+  ]
+}

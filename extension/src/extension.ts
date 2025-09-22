@@ -1,20 +1,22 @@
+// SPDX-FileCopyrightText: 2025 Velociraptor115
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import * as vscode from 'vscode';
 import * as path from "path";
+import { handleRequest } from "@common-server/jj-backend";
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "vscode-jj-graph" activated');
 
 	const disposable = vscode.commands.registerCommand(
-    'vscode-jj-graph.helloWorld',
+    'vscode-jj-graph.openNewTab',
     () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
-      vscode.window.showInformationMessage('Hello World from vscode-jj-graph!');
-
       const panel = prepareWebView(context);
       panel.webview.onDidReceiveMessage(
-          async ({ message }) => {
-              vscode.window.showInformationMessage(message);
+          async (message) => {
+              const response = await handleRequest(message)
+              panel.webview.postMessage(response)
           },
           undefined,
           context.subscriptions
@@ -30,14 +32,15 @@ export function deactivate() {}
 
 function prepareWebView(context: vscode.ExtensionContext) {
     const panel = vscode.window.createWebviewPanel(
-        "vueWebview",
-        "vue webview",
+        "vscode-jj-graph-webview",
+        "JJ Graph",
         vscode.ViewColumn.One,
         {
             enableScripts: true,
+            retainContextWhenHidden: true,
             localResourceRoots: [
                 vscode.Uri.file(
-                    path.join(context.extensionPath, "vue-dist", "assets")
+                    path.join(context.extensionPath, "dist-webview", "assets")
                 ),
             ],
         }
@@ -46,35 +49,28 @@ function prepareWebView(context: vscode.ExtensionContext) {
     const dependencyNameList: string[] = [
         "index.css",
         "index.js",
-        "vendor.js",
-        "logo.png",
     ];
     const dependencyList: vscode.Uri[] = dependencyNameList.map((item) =>
         panel.webview.asWebviewUri(
             vscode.Uri.file(
-                path.join(context.extensionPath, "vue-dist", "assets", item)
+                path.join(context.extensionPath, "dist-webview", "assets", item)
             )
         )
     );
     const html = `<!DOCTYPE html>
-  <html lang="en">
+<html lang="">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-    <script>
-          const vscode = acquireVsCodeApi();
-    </script>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJ Graph</title>
     <script type="module" crossorigin src="${dependencyList[1]}"></script>
-    <link rel="modulepreload" href="${dependencyList[2]}">
-    <link rel="stylesheet" href="${dependencyList[0]}">
+    <link rel="stylesheet" crossorigin href="${dependencyList[0]}">
   </head>
   <body>
     <div id="app"></div>
   </body>
-  </html>
-  `;
+</html>`;
     panel.webview.html = html;
     return panel;
 }

@@ -4,6 +4,7 @@
   "description": "",
   "version": "0.0.1",
   "publisher": "Velociraptor115",
+  "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.101.0"
   },
@@ -15,24 +16,34 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-jj-graph.helloWorld",
-        "title": "Hello World"
+        "category": "JJ Graph",
+        "command": "vscode-jj-graph.openNewTab",
+        "title": "JJ Graph (new tab)"
       }
-    ]
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "vscode-jj-graph.openNewTab",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "bun run build:production",
     "build": "bun build --entrypoints src/extension.ts --outfile dist/extension.js --target node --format cjs --external vscode",
-    "build:production": "bun build --entrypoints src/extension.ts --outfile dist/extension.js --target node --format cjs --external vscode --minify",
-    "build:production:watch": "bun build --watch --entrypoints src/extension.ts --outfile dist/extension.js --target node --format cjs --external vscode --minify",
+    "build:production": "bun build --entrypoints src/extension.ts --outfile dist/extension.js --target node --format cjs --external vscode --production",
+    "build:production:watch": "bun build --watch --entrypoints src/extension.ts --outfile dist/extension.js --target node --format cjs --external vscode --production",
     "test": "vscode-test"
   },
   "devDependencies": {
+    "@tsconfig/bun": "catalog:bun",
     "@types/vscode": "^1.101.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
-    "typescript": "^5.8.3",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2"
+    "@types/mocha": "catalog:vsc-extension-dev",
+    "@types/node": "catalog:vsc-extension-dev",
+    "typescript": "catalog:typescript",
+    "@vscode/test-cli": "catalog:vsc-extension-dev",
+    "@vscode/test-electron": "catalog:vsc-extension-dev"
   }
 }

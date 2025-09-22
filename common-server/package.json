@@ -1,0 +1,10 @@
+{
+  "name": "jj-graph-common-server",
+  "private": true,
+  "license": "LGPL-3.0-only",
+  "dependencies": {},
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:bun",
+    "@types/bun": "catalog:bun"
+  }
+}

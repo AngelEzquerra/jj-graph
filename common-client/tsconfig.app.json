@@ -3,9 +3,8 @@
   "include": [
     "env.d.ts",
     "../common/**/*",
-    "../common-client/src/**/*",
     "src/**/*",
-    "src/**/*.vue",
+    "src/**/*.vue"
   ],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
@@ -13,8 +12,7 @@
 
     "paths": {
       "@common/*": ["../common/*"],
-      "@common-client/*": ["../common-client/src/*"],
-      "@/*": ["./src/*"]
+      "@common-client/*": ["./src/*"]
     }
   }
 }

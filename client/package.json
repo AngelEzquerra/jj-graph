@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
@@ -11,19 +12,20 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "pinia": "^3.0.3",
-    "vue": "^3.5.22"
+    "@vueuse/core": "catalog:vue",
+    "pinia": "catalog:vue",
+    "vue": "catalog:vue"
   },
   "devDependencies": {
-    "@tsconfig/node24": "^24.0.1",
-    "@types/node": "^24.9.1",
-    "@types/vscode-webview": "^1.57.5",
-    "@vitejs/plugin-vue": "^6.0.1",
-    "@vue/tsconfig": "^0.8.1",
-    "npm-run-all2": "^8.0.4",
-    "typescript": "~5.9.3",
-    "vite": "^7.1.12",
-    "vite-plugin-vue-devtools": "^8.0.3",
-    "vue-tsc": "^3.1.2"
+    "@tsconfig/bun": "catalog:bun",
+    "@types/bun": "catalog:bun",
+    "@types/vscode-webview": "catalog:vsc-extension-dev",
+    "@vitejs/plugin-vue": "catalog:vue-dev",
+    "@vue/tsconfig": "catalog:vue-dev",
+    "npm-run-all2": "catalog:vue-dev",
+    "typescript": "catalog:typescript",
+    "vite": "catalog:vue-dev",
+    "vite-plugin-vue-devtools": "catalog:vue-dev",
+    "vue-tsc": "catalog:vue-dev"
   }
 }

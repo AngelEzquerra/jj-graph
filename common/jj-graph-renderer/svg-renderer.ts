@@ -30,10 +30,12 @@ export type EdgeToDraw = {
   c: ColorId
 }
 
+type CurveType = 'l' | 'c' | 's' | 'q'
+
 export const unit = 24
 const centerOffset = unit / 2
-const useCurves = true
-const curviness = 0.5
+const curveType: CurveType = 'q'
+const curviness = 0.75
 const curveOffset = centerOffset * curviness
 const centerMinusCurveOffset = centerOffset - curveOffset
 
@@ -54,25 +56,45 @@ export function genNodesToDraw(nodes: Node[], nodeColumns: GraphNodeColumn[], no
 
 const rightTurnStart = [
   `v${centerMinusCurveOffset}`,
-  useCurves ? (`s0,${curveOffset} ${curveOffset},${curveOffset}`) : (`l${curveOffset},${curveOffset}`),
+  {
+    'l': `l${curveOffset},${curveOffset}`,
+    'c': `c0,${curveOffset} 0,${curveOffset} ${curveOffset},${curveOffset}`,
+    's': `s0,${curveOffset} ${curveOffset},${curveOffset}`,
+    'q': `q0,${curveOffset} ${curveOffset},${curveOffset}`,
+  }[curveType],
   `h${centerMinusCurveOffset}`
 ].join(" ")
 
 const leftTurnStart = [
   `v${centerMinusCurveOffset}`,
-  useCurves ? (`s0,${curveOffset} -${curveOffset},${curveOffset}`) : (`l-${curveOffset},${curveOffset}`),
+  {
+    'l': `l-${curveOffset},${curveOffset}`,
+    'c': `c0,${curveOffset} 0,${curveOffset} -${curveOffset},${curveOffset}`,
+    's': `s0,${curveOffset} -${curveOffset},${curveOffset}`,
+    'q': `q0,${curveOffset} -${curveOffset},${curveOffset}`,
+  }[curveType],
   `h-${centerMinusCurveOffset}`
 ].join(" ")
 
 const rightTurnEnd = [
   `h${centerMinusCurveOffset}`,
-  useCurves ? (`s${curveOffset},0 ${curveOffset},${curveOffset}`) : (`l${curveOffset},${curveOffset}`),
+  {
+    'l': `l${curveOffset},${curveOffset}`,
+    'c': `c${curveOffset},0 ${curveOffset},0 ${curveOffset},${curveOffset}`,
+    's': `s${curveOffset},0 ${curveOffset},${curveOffset}`,
+    'q': `q${curveOffset},0 ${curveOffset},${curveOffset}`,
+  }[curveType],
   `v${centerMinusCurveOffset}`
 ].join(" ")
 
 const leftTurnEnd = [
   `h-${centerMinusCurveOffset}`,
-  useCurves ? (`s-${curveOffset},0 -${curveOffset},${curveOffset}`) : (`l-${curveOffset},${curveOffset}`),
+  {
+    'l': `l-${curveOffset},${curveOffset}`,
+    'c': `c-${curveOffset},0 -${curveOffset},0 -${curveOffset},${curveOffset}`,
+    's': `s-${curveOffset},0 -${curveOffset},${curveOffset}`,
+    'q': `q-${curveOffset},0 -${curveOffset},${curveOffset}`,
+  }[curveType],
   `v${centerMinusCurveOffset}`
 ].join(" ")
 

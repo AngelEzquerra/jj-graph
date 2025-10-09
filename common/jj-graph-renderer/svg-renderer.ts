@@ -82,58 +82,68 @@ export function genEdgesToDraw(directedEdgeColors: [NodeId, NodeId, ColorId][], 
   return [ layout.edges.map((edge, idx) => {
     const lineData: string[] = []
     let currentCol: number = -1
+    let nextCol: number = -1
     let verticalDist: number = 0
+
+    function drawVertical() {
+      if (verticalDist > 0) {
+        lineData.push(`v${verticalDist * unit}`)
+        verticalDist = 0
+      }
+    }
+
+    function drawHorizontal() {
+      const direction = Math.sign(nextCol - currentCol)
+      const horizontalDistance = Math.abs(nextCol - currentCol)
+
+      if (direction > 0) {
+        lineData.push(rightTurnStart)
+        if (horizontalDistance > 1) {
+          lineData.push(`h${(horizontalDistance - 1) * unit}`)
+        }
+        lineData.push(rightTurnEnd)
+      } else if (direction < 0) {
+        lineData.push(leftTurnStart)
+        if (horizontalDistance > 1) {
+          lineData.push(`h-${(horizontalDistance - 1) * unit}`)
+        }
+        lineData.push(leftTurnEnd)
+      }
+
+      currentCol = nextCol
+      maxColumn = currentCol > maxColumn ? currentCol : maxColumn;
+    }
 
     for (const p of edge.path) {
       switch (p.type) {
         case "s":
           currentCol = p.column
-          maxColumn = currentCol > maxColumn ? currentCol : maxColumn;
+          nextCol = p.column
           verticalDist = 0
           lineData.push(`M${p.column * unit + centerOffset},${p.row * unit + centerOffset}`)
           break;
 
         case "c":
-          verticalDist += 1
-          break;
-
-        case "b":
-          const toCol = p.column
-          const direction = Math.sign(toCol - currentCol)
-          const horizontalDistance = Math.abs(toCol - currentCol)
-          if (direction === 0) {
+          if (nextCol === currentCol) {
             verticalDist += 1
             break;
           }
 
-          if (verticalDist > 0) {
-            lineData.push(`v${verticalDist * unit}`)
-          }
-          verticalDist = -1
+          drawVertical()
+          drawHorizontal()
+          break;
 
-          if (direction > 0) {
-            lineData.push(rightTurnStart)
-            if (horizontalDistance > 1) {
-              lineData.push(`h${(horizontalDistance - 1) * unit}`)
-            }
-            lineData.push(rightTurnEnd)
-          } else if (direction < 0) {
-            lineData.push(leftTurnStart)
-            if (horizontalDistance > 1) {
-              lineData.push(`h-${(horizontalDistance - 1) * unit}`)
-            }
-            lineData.push(leftTurnEnd)
+        case "b":
+          if (nextCol !== currentCol) {
+            console.warn("Multiple consecutive branch instructions detected")
+            console.warn("edge", edge.desc.from, "->", edge.desc.to, edge.path )
           }
-
-          currentCol = toCol
-          maxColumn = currentCol > maxColumn ? currentCol : maxColumn;
+          nextCol = p.column
           break;
 
         case "e":
-          if (verticalDist > 0) {
-            lineData.push(`v${verticalDist * unit}`)
-            verticalDist = 0
-          }
+          drawVertical()
+          drawHorizontal()
           break;
       }
     }

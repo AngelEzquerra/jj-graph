@@ -21,6 +21,8 @@ type NodeCreationPreference =
 export type NodeColumnGenOptions = {
   parentLineCreation?: ParentLineCreationPreference
   nodeCreation?: NodeCreationPreference
+  preferMergingParentLines?: boolean
+  preferLazyBranchingParentLines?: boolean
 }
 
 type EdgeId = number
@@ -108,8 +110,10 @@ export function genGraphLayout(nodes: Node[], opts: NodeColumnGenOptions = {}): 
   const edges: GraphEdge[] = []
 
   const {
-    parentLineCreation = 'new',
-    nodeCreation = 'existing',
+    parentLineCreation = 'leftmost' as ParentLineCreationPreference,
+    nodeCreation = 'leftmost' as NodeCreationPreference,
+    preferMergingParentLines = false as boolean,
+    preferLazyBranchingParentLines = true as boolean,
   } = opts
 
   console.log('parentLineCreation', parentLineCreation)
@@ -149,6 +153,7 @@ export function genGraphLayout(nodes: Node[], opts: NodeColumnGenOptions = {}): 
     colsActiveEdges[colNumber] = [{ desc: {id: -1, from: -1, to: -1}, path: [] }]
     for (const otherActiveEdge of otherActiveEdgesInThisCol) {
       const appropriateCol = findOrCreateColUsingPreference(parentLineCreation, colsActiveEdges, otherActiveEdge.desc.to)
+      // console.log('row', node.id, 'colNumber', colNumber, 'otherActiveEdge', otherActiveEdge, 'appropriateCol', appropriateCol)
       otherActiveEdge.path.push({ type: 'b', column: appropriateCol })
       colsActiveEdges[appropriateCol]!.push(otherActiveEdge)
     }
@@ -174,18 +179,43 @@ export function genGraphLayout(nodes: Node[], opts: NodeColumnGenOptions = {}): 
       }
       edges.push(parentEdge)
 
-      const fromCol = colNumber
-      // console.log('edge', node.id, '->', parentNodeId)
-      const toCol = findOrCreateColUsingPreference(parentLineCreation, colsActiveEdges, parentNodeId, true)
+      if (!preferLazyBranchingParentLines) {
+        const fromCol = colNumber
+        // console.log('edge', node.id, '->', parentNodeId)
+        const toCol = findOrCreateColUsingPreference(parentLineCreation, colsActiveEdges, parentNodeId, true)
 
-      if (fromCol !== toCol) {
-        parentEdge.path.push({
-          type: 'b',
-          column: toCol
-        })
+        if (fromCol !== toCol) {
+          parentEdge.path.push({
+            type: 'b',
+            column: toCol
+          })
+        }
+        colsActiveEdges[toCol]!.push(parentEdge)
       }
+      else {
+        colsActiveEdges[colNumber].push(parentEdge)
+      }
+    }
 
-      colsActiveEdges[toCol]!.push(parentEdge)
+    if (preferMergingParentLines) {
+      for (let i = 0; i < colsActiveEdges.length; i++) {
+        const colActiveEdges = colsActiveEdges[i]!
+
+        const edgesToRemove: GraphEdge[] = []
+        for (const colActiveEdge of colActiveEdges) {
+          const mostAppropriateCol = findOrCreateColUsingPreference(parentLineCreation === 'new' ? 'existing': parentLineCreation,colsActiveEdges, colActiveEdge.desc.to )
+          if (i !== mostAppropriateCol) {
+            const edgePath = colActiveEdge.path
+            edgePath.push({
+              type: 'b',
+              column: mostAppropriateCol
+            })
+            colsActiveEdges[mostAppropriateCol]!.push(colActiveEdge)
+            edgesToRemove.push(colActiveEdge)
+          }
+        }
+        colsActiveEdges[i] = colActiveEdges.filter(x => !edgesToRemove.includes(x))
+      }
     }
 
     nodeColumns.push(colNumber)

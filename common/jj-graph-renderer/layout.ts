@@ -14,8 +14,13 @@ type ParentLineCreationPreference =
   | 'existing'
   | 'leftmost'
 
+type NodeCreationPreference =
+  | 'existing'
+  | 'leftmost'
+
 export type NodeColumnGenOptions = {
   parentLineCreation?: ParentLineCreationPreference
+  nodeCreation?: NodeCreationPreference
 }
 
 type EdgeId = number
@@ -63,64 +68,102 @@ export type GraphLayout = {
   edges: GraphEdge[]
 }
 
+function findOrCreateColUsingPreference(pref: ParentLineCreationPreference, colsActiveEdges: GraphEdge[][], nodeIdToMatch: NodeId, shouldLog: boolean = false) {
+  let colNumber: GraphNodeColumn = -1
+
+  const leftmostEmptyCol = colsActiveEdges.findIndex(colActiveEdges => colActiveEdges.length === 0)
+  const leftmostColWithMatchingDestinationNodeId = colsActiveEdges.findIndex(colActiveEdges => colActiveEdges.some(e => e.desc.to === nodeIdToMatch))
+
+  if (pref === 'existing') {
+    colNumber = leftmostColWithMatchingDestinationNodeId
+  }
+
+  if (pref === 'leftmost') {
+    if (leftmostEmptyCol >= 0 && leftmostColWithMatchingDestinationNodeId >= 0) {
+      colNumber = Math.min(leftmostEmptyCol, leftmostColWithMatchingDestinationNodeId)
+    } else if (leftmostColWithMatchingDestinationNodeId >= 0) {
+      colNumber = leftmostColWithMatchingDestinationNodeId
+    }
+  }
+
+  if (colNumber < 0) {
+    colNumber = leftmostEmptyCol
+  }
+
+  if (colNumber < 0) {
+    colsActiveEdges.push([])
+    colNumber = colsActiveEdges.length - 1
+  }
+
+  if (shouldLog) {
+    console.log('existingPl', leftmostColWithMatchingDestinationNodeId, 'emptyPl', leftmostEmptyCol, 'chosen', colNumber)
+  }
+
+  return colNumber
+}
+
 export function genGraphLayout(nodes: Node[], opts: NodeColumnGenOptions = {}): GraphLayout {
-  const colActiveEdges: (GraphEdge | null)[] = []
+  const colsActiveEdges: GraphEdge[][] = []
   const nodeColumns: number[] = []
   const edges: GraphEdge[] = []
 
   const {
     parentLineCreation = 'new',
+    nodeCreation = 'existing',
   } = opts
+
+  console.log('parentLineCreation', parentLineCreation)
+  console.log('nodeCreation', nodeCreation)
 
   for (const node of nodes) {
     const nodeId = node.id
-    let colNumber: number = -1 // Haven't placed the node in the graph yet
-
-    // Find if current node fulfills a parent line
-    colNumber = colActiveEdges.findIndex(colActiveEdge => colActiveEdge?.desc.to === nodeId)
-
-    // If there are no parent lines, see if there is an empty column
-    if (colNumber < 0) {
-      colNumber = colActiveEdges.findIndex(colActiveEdge => colActiveEdge === null)
-    }
-
-    // All lines are already occupied. Create a new line
-    if (colNumber < 0) {
-      colActiveEdges.push(null)
-      colNumber = colActiveEdges.length - 1
-    }
+    const colNumber = findOrCreateColUsingPreference(nodeCreation, colsActiveEdges, nodeId)
 
     // Fulfill all matching parent lines
-    for (let i = 0; i < colActiveEdges.length; i++) {
-      const colActiveEdge = colActiveEdges[i]
-      if (colActiveEdge?.desc.to === nodeId) {
-        const fromCol = i
-        const toCol = colNumber
+    for (let i = 0; i < colsActiveEdges.length; i++) {
+      const colActiveEdges = colsActiveEdges[i]!
+      const edgesToRemove: GraphEdge[] = []
+      for (const colActiveEdge of colActiveEdges) {
+        if (colActiveEdge.desc.to === nodeId) {
+          const fromCol = i
+          const toCol = colNumber
 
-        const edgePath = colActiveEdge.path
-        if (fromCol !== toCol) {
-          edgePath.push({
-            type: 'b',
-            column: toCol
-          })
-        } else {
+          const edgePath = colActiveEdge.path
+          if (fromCol !== toCol) {
+            edgePath.push({
+              type: 'b',
+              column: toCol
+            })
+          }
           edgePath.push({ type: 'c' })
-        }
-        edgePath.push({ type: 'e' })
+          edgePath.push({ type: 'e' })
 
-        colActiveEdges[i] = null
+          edgesToRemove.push(colActiveEdge)
+        }
       }
+      colsActiveEdges[i] = colActiveEdges.filter(x => !edgesToRemove.includes(x))
     }
 
-    // Propagate all non-empty edges
-    for (const colActiveEdge of colActiveEdges) {
-      if (colActiveEdge !== null) {
+    // Push any parent lines not matching this node on this column to other columns
+    const otherActiveEdgesInThisCol = [...colsActiveEdges[colNumber]!]
+    colsActiveEdges[colNumber] = [{ desc: {id: -1, from: -1, to: -1}, path: [] }]
+    for (const otherActiveEdge of otherActiveEdgesInThisCol) {
+      const appropriateCol = findOrCreateColUsingPreference(parentLineCreation, colsActiveEdges, otherActiveEdge.desc.to)
+      otherActiveEdge.path.push({ type: 'b', column: appropriateCol })
+      colsActiveEdges[appropriateCol]!.push(otherActiveEdge)
+    }
+    colsActiveEdges[colNumber] = []
+
+    for (let i = 0; i < colsActiveEdges.length; i++) {
+      const colActiveEdges = colsActiveEdges[i]!
+      for (const colActiveEdge of colActiveEdges) {
         colActiveEdge.path.push({ type: 'c' })
       }
     }
 
     // Create parent lines for parents of this node
     for (const parentNodeId of node.parents) {
+      // console.log(colsActiveEdges.map((colActiveEdges, colIdx) => `${colIdx}: ${colActiveEdges.length === 0 ? 'empty': colActiveEdges.map(e => e.desc.to).join(',')}`).join(' ; '))
       const parentEdge: GraphEdge = {
         desc: {
           id: edges.length,
@@ -132,11 +175,8 @@ export function genGraphLayout(nodes: Node[], opts: NodeColumnGenOptions = {}): 
       edges.push(parentEdge)
 
       const fromCol = colNumber
-      let toCol = colActiveEdges.findIndex(colActiveEdge => colActiveEdge === null)
-      if (toCol < 0) {
-        colActiveEdges.push(null)
-        toCol = colActiveEdges.length - 1
-      }
+      // console.log('edge', node.id, '->', parentNodeId)
+      const toCol = findOrCreateColUsingPreference(parentLineCreation, colsActiveEdges, parentNodeId, true)
 
       if (fromCol !== toCol) {
         parentEdge.path.push({
@@ -145,7 +185,7 @@ export function genGraphLayout(nodes: Node[], opts: NodeColumnGenOptions = {}): 
         })
       }
 
-      colActiveEdges[toCol] = parentEdge
+      colsActiveEdges[toCol]!.push(parentEdge)
     }
 
     nodeColumns.push(colNumber)

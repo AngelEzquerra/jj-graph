@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 import {
-  genNodeColumns,
+  genGraphLayout,
   type NodeColumnGenOptions,
 } from "./layout"
 import { genColorMap } from "./color"
@@ -26,10 +26,11 @@ type Node = {
 type RenderOutput = [ GraphNodeColumn, NodeToDraw[], EdgeToDraw[] ]
 
 export function renderLogic(nodes: Node[], opts?: NodeColumnGenOptions): RenderOutput {
-  const nodeColumns = genNodeColumns(nodes, opts)
+  const layout = genGraphLayout(nodes, opts)
   const [ nodeColors, directedEdgeColors ] = genColorMap(nodes)
-  const nodesToDraw = genNodesToDraw(nodes, nodeColumns, nodeColors)
-  const edgesToDraw = genEdgesToDraw(directedEdgeColors, nodeColumns)
-  const maxNodeColumn = nodeColumns.reduce((a, b) => Math.max(a, b), 0)
-  return [ maxNodeColumn, nodesToDraw, edgesToDraw ]
+  const nodesToDraw = genNodesToDraw(nodes, layout.nodeColumns, nodeColors)
+  const [ edgesToDraw, maxEdgeColumn ] = genEdgesToDraw(directedEdgeColors, layout)
+  const maxNodeColumn = layout.nodeColumns.reduce((a, b) => Math.max(a, b), 0)
+  const maxColumn = Math.max(maxNodeColumn, maxEdgeColumn)
+  return [ maxColumn, nodesToDraw, edgesToDraw ]
 }

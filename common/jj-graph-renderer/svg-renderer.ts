@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-only
 
+import { type GraphLayout } from "./layout"
+
 type NodeId = number
 type EdgeId = number
 type ColorId = number
@@ -50,48 +52,98 @@ export function genNodesToDraw(nodes: Node[], nodeColumns: GraphNodeColumn[], no
   })
 }
 
-export function genEdgesToDraw(directedEdgeColors: [NodeId, NodeId, ColorId][], nodeColumns: GraphNodeColumn[]): EdgeToDraw[] {
-  return directedEdgeColors.map((edge, idx) => {
-    const [ fromId, toId, colorIdx ] = edge
-    const fromRow = fromId
-    const toRow = toId
-    const fromCol = nodeColumns[fromRow]
-    const toCol = nodeColumns[toRow]
+const rightTurnStart = [
+  `v${centerMinusCurveOffset}`,
+  useCurves ? (`s0,${curveOffset} ${curveOffset},${curveOffset}`) : (`l${curveOffset},${curveOffset}`),
+  `h${centerMinusCurveOffset}`
+].join(" ")
 
-    const direction = Math.sign(toCol - fromCol)
-    const horizontalDistance = Math.abs(toCol - fromCol)
-    const verticalDistance = toRow - fromRow
+const leftTurnStart = [
+  `v${centerMinusCurveOffset}`,
+  useCurves ? (`s0,${curveOffset} -${curveOffset},${curveOffset}`) : (`l-${curveOffset},${curveOffset}`),
+  `h-${centerMinusCurveOffset}`
+].join(" ")
 
-    const lineData = (
-      toCol === fromCol
-        ? (   `M${fromCol * unit + centerOffset},${fromRow * unit + centerOffset}`
-            + `L${toCol * unit + centerOffset},${toRow * unit + centerOffset}`
-          )
-        : direction > 0 ?
-            (
-                `M${fromCol * unit + centerOffset},${fromRow * unit + centerOffset}`
-              + `v${centerMinusCurveOffset}`
-              + (useCurves ? (`s0,${curveOffset} ${curveOffset * direction},${curveOffset}`) : (`l${curveOffset * direction},${curveOffset}`))
-              + `h${direction * ((horizontalDistance * unit) - (2 * curveOffset))}`
-              + (useCurves ? (`s${curveOffset * direction},0 ${curveOffset * direction},${curveOffset}`) : (`l${curveOffset * direction},${curveOffset}`))
-              + `v${(verticalDistance * unit) - ((2 * curveOffset) + centerMinusCurveOffset)}`
-            )
-          :
-            (
-                `M${fromCol * unit + centerOffset},${fromRow * unit + centerOffset}`
-              + `v${(verticalDistance * unit) - ((2 * curveOffset) + centerMinusCurveOffset)}`
-              + (useCurves ? (`s0,${curveOffset} ${curveOffset * direction},${curveOffset}`) : (`l${curveOffset * direction},${curveOffset}`))
-              + `h${direction * ((horizontalDistance * unit) - (2 * curveOffset))}`
-              + (useCurves ? (`s${curveOffset * direction},0 ${curveOffset * direction},${curveOffset}`) : (`l${curveOffset * direction},${curveOffset}`))
-              + `v${centerMinusCurveOffset}`
-            )
-    )
-    return {
-      id: idx,
-      from: fromId,
-      to: toId,
-      d: lineData,
-      c: colorIdx,
+const rightTurnEnd = [
+  `h${centerMinusCurveOffset}`,
+  useCurves ? (`s${curveOffset},0 ${curveOffset},${curveOffset}`) : (`l${curveOffset},${curveOffset}`),
+  `v${centerMinusCurveOffset}`
+].join(" ")
+
+const leftTurnEnd = [
+  `h-${centerMinusCurveOffset}`,
+  useCurves ? (`s-${curveOffset},0 -${curveOffset},${curveOffset}`) : (`l-${curveOffset},${curveOffset}`),
+  `v${centerMinusCurveOffset}`
+].join(" ")
+
+export function genEdgesToDraw(directedEdgeColors: [NodeId, NodeId, ColorId][], layout: GraphLayout): [ EdgeToDraw[], number ] {
+  let maxColumn = 0
+
+  return [ layout.edges.map((edge, idx) => {
+    const lineData: string[] = []
+    let currentCol: number = -1
+    let verticalDist: number = 0
+
+    for (const p of edge.path) {
+      switch (p.type) {
+        case "s":
+          currentCol = p.column
+          maxColumn = currentCol > maxColumn ? currentCol : maxColumn;
+          verticalDist = 0
+          lineData.push(`M${p.column * unit + centerOffset},${p.row * unit + centerOffset}`)
+          break;
+
+        case "c":
+          verticalDist += 1
+          break;
+
+        case "b":
+          const toCol = p.column
+          const direction = Math.sign(toCol - currentCol)
+          const horizontalDistance = Math.abs(toCol - currentCol)
+          if (direction === 0) {
+            verticalDist += 1
+            break;
+          }
+
+          if (verticalDist > 0) {
+            lineData.push(`v${verticalDist * unit}`)
+          }
+          verticalDist = -1
+
+          if (direction > 0) {
+            lineData.push(rightTurnStart)
+            if (horizontalDistance > 1) {
+              lineData.push(`h${(horizontalDistance - 1) * unit}`)
+            }
+            lineData.push(rightTurnEnd)
+          } else if (direction < 0) {
+            lineData.push(leftTurnStart)
+            if (horizontalDistance > 1) {
+              lineData.push(`h-${(horizontalDistance - 1) * unit}`)
+            }
+            lineData.push(leftTurnEnd)
+          }
+
+          currentCol = toCol
+          maxColumn = currentCol > maxColumn ? currentCol : maxColumn;
+          break;
+
+        case "e":
+          if (verticalDist > 0) {
+            lineData.push(`v${verticalDist * unit}`)
+            verticalDist = 0
+          }
+          break;
+      }
     }
-  })
+
+    return {
+      id: edge.desc.id,
+      from: edge.desc.from,
+      to: edge.desc.to,
+      d: lineData.join(' '),
+      c: directedEdgeColors[idx][2],
+    }
+  }), maxColumn ]
 }

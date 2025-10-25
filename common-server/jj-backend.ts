@@ -100,15 +100,16 @@ const templateStructure = tEnd(tObject([
   tObjectFieldRaw('tags', tArrayMap('self.tags()', 't', `json(t)`)),
 ]))
 
-function argsForJJCommitLog(logAll: boolean) {
+function argsForJJCommitLog(revset?: string) {
   const jjCommitLogArgs = [
     `log`,
     `-T`, templateStructure,
     `--no-pager`,
+    `--ignore-working-copy`,
   ]
-  if (logAll) {
+  if (revset) {
     jjCommitLogArgs.push(
-      `-r`, `all()`,
+      `-r`, revset,
     )
   }
   return jjCommitLogArgs
@@ -117,8 +118,8 @@ function argsForJJCommitLog(logAll: boolean) {
 const graphParserCurved = createJJGraphParserCurved()
 const commitGraphParser = createJJCommitGraphParser()
 
-async function handleJJCommitLogInvocation() {
-  const [cpStdio, cpStderr] = await handleCp(invokeJJ(process.env.JJ_REPO_PATH!, argsForJJCommitLog(true)))
+async function handleJJCommitLogInvocation(request: api.JJApiRequest) {
+  const [cpStdio, cpStderr] = await handleCp(invokeJJ(request.repoDir, argsForJJCommitLog(request.revset)))
   // console.log(cpStdio)
   const graphParsed = graphParserCurved.parseJJGraph(cpStdio)
   // console.log(graphParsed.nodes)
@@ -129,7 +130,7 @@ async function handleJJCommitLogInvocation() {
 export async function handleRequest(request: api.JJApiRequest): Promise<api.JJApiResponse> {
   switch (request.request) {
     case api.REQUEST_LOG:
-      const logOutput = await handleJJCommitLogInvocation()
+      const logOutput = await handleJJCommitLogInvocation(request)
       return { ...request, response: { commits: logOutput.nodes } }
     default:
       return { ...request, response: 'Unknown request' }

@@ -6,12 +6,14 @@ export const REQUEST_LOG = 'log' as const
 
 export type JJApiRequest = {
   request: string
+  repoDir: string
+  revset?: string
 }
 
 export type JJApiResponse = JJApiRequest & {
   response: any
 }
 
-export function log(): JJApiRequest {
-  return { request: REQUEST_LOG }
+export function log(repoDir: string, revset?: string): JJApiRequest {
+  return { request: REQUEST_LOG, repoDir, revset }
 }

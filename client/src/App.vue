@@ -22,7 +22,7 @@ window.addEventListener('message', event => {
 })
 
 const vscode = window.acquireVsCodeApi()
-vscode.postMessage(api.log())
+vscode.postMessage(api.log(import.meta.env.JJ_REPO_PATH, "all()"))
 
 </script>
 

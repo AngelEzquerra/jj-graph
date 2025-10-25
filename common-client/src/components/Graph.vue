@@ -10,6 +10,7 @@ import { computed, ref, watch } from 'vue'
 import { renderLogic } from '@common/jj-graph-renderer'
 import { unit } from '@common/jj-graph-renderer/svg-renderer'
 import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
+import GraphLayer from './GraphLayer.vue'
 import { type NodeColumnGenOptions } from '@common/jj-graph-renderer/layout'
 
 type NodeId = number
@@ -111,27 +112,19 @@ const colorMap = [
       </tr>
     </table>
     <div class="graph-container">
-      <svg class="graph-svg" :width="unit * graphColumnCount" :height="unit * commits.length">
-        <g v-for="lineToDraw in edgesToDraw" :key="lineToDraw.uiBaseId" v-memo="[ edgesToDraw ]">
-          <path :d="lineToDraw.d" stroke-width="5" stroke-linecap="round" stroke="black" fill="none"></path>
-          <path :d="lineToDraw.d" stroke-width="2" stroke-linecap="round" :stroke="colorMap[lineToDraw.c % colorMap.length]" fill="none"></path>
-        </g>
-        <circle v-for="nodeToDraw in nodesToDraw" :key="nodeToDraw.uiBaseId" :cx="nodeToDraw.x" :cy="nodeToDraw.y" r="4" :fill="colorMap[nodeToDraw.c % colorMap.length]" stroke="black" stroke-width="1"></circle>
-
-        <g v-for="lineToDraw in edgesToDraw" :key="lineToDraw.uiHighlightId" v-memo="[highlightedEdges.has(lineToDraw.id), edgesToDraw ]">
-          <!-- <path :d="lineToDraw.d" stroke-width="8" stroke-linecap="round" :stroke="highlightedEdges.has(lineToDraw.id) ? `white` : `none`" fill="none"></path> -->
-          <path :d="lineToDraw.d" stroke-width="5" stroke-linecap="round" :stroke="highlightedEdges.has(lineToDraw.id) ? `white` : `none`" fill="none"></path>
-          <path :d="lineToDraw.d" stroke-width="2" stroke-linecap="round" :stroke="highlightedEdges.has(lineToDraw.id) ? colorMap[lineToDraw.c % colorMap.length] : `none`" fill="none"></path>
-        </g>
-        <g v-for="nodeToDraw in nodesToDraw" :key="nodeToDraw.uiHighlightId" v-memo="[highlightedNodeId === nodeToDraw.id, highlightedParentNodeIds.includes(nodeToDraw.id), nodesToDraw ]">
-          <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" r="6" :fill="highlightedNodeId === nodeToDraw.id ? `white` : highlightedParentNodeIds.includes(nodeToDraw.id) ? `green` : `none`" stroke="none"></circle>
-          <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" r="4" :fill="highlightedNodeId === nodeToDraw.id || highlightedParentNodeIds.includes(nodeToDraw.id) ? colorMap[nodeToDraw.c % colorMap.length] : `none`" :stroke="highlightedNodeId === nodeToDraw.id || highlightedParentNodeIds.includes(nodeToDraw.id) ? `black`: `none`" stroke-width="1"></circle>
-        </g>
-
-        <g class="pointer-events-all" v-memo="[ edgesToDraw, nodesToDraw ]">
-          <path v-for="lineToDraw in edgesToDraw" :key="lineToDraw.uiBaseId" :d="lineToDraw.d" stroke-width="15" stroke="none" fill="none" @mouseenter="highlightNode(lineToDraw.from)" @mouseleave="removeNodeHighlight"></path>
-          <circle v-for="nodeToDraw in nodesToDraw" :key="nodeToDraw.uiBaseId" :cx="nodeToDraw.x" :cy="nodeToDraw.y" r="18" fill="none" stroke="none" @mouseenter="highlightNode(nodeToDraw.id)" @mouseleave="removeNodeHighlight"></circle>
-        </g>
+      <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg" :width="unit * graphColumnCount" :height="unit * commits.length">
+        <GraphLayer
+          :nodes-to-draw="nodesToDraw"
+          :edges-to-draw="edgesToDraw"
+          :color-map="colorMap"
+          :highlighted-node-id="highlightedNodeId"
+          :highlighted-parent-node-ids="highlightedParentNodeIds"
+          :highlighted-edges="highlightedEdges"
+          @mouse-enter-node="highlightNode"
+          @mouse-leave-node="removeNodeHighlight"
+          @mouse-enter-edge="highlightEdge"
+          @mouse-leave-edge="removeEdgeHighlight"
+        />
       </svg>
     </div>
 

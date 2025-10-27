@@ -11,6 +11,7 @@ import { renderLogic } from '@common/jj-graph-renderer'
 import { unit } from '@common/jj-graph-renderer/svg-renderer'
 import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
 import GraphLayer from './GraphLayer.vue'
+import CommitDetails from './commit-details/CommitDetails.vue'
 import { type NodeColumnGenOptions } from '@common/jj-graph-renderer/layout'
 
 type NodeId = number
@@ -116,6 +117,66 @@ function removeEdgeHighlight() {
   highlightedEdgeId.value = undefined
 }
 
+const selectedPreviewNodeId = ref<NodeId>()
+const selectedPinnedNodeIds = ref<NodeId[]>([])
+
+function closeCommitDetails(nodeId: NodeId) {
+  const snIds = selectedPinnedNodeIds.value
+  const indexOfNodeId = snIds.indexOf(nodeId)
+  if (indexOfNodeId >= 0) {
+    snIds.splice(indexOfNodeId, 1)
+  } else if (selectedPreviewNodeId.value === nodeId) {
+    selectedPreviewNodeId.value = undefined
+  }
+}
+
+function selectNodeAndBringToFront(nodeId: NodeId) {
+  const snIds = selectedPinnedNodeIds.value
+  const indexOfNodeId = snIds.indexOf(nodeId)
+  if (indexOfNodeId >= 0) {
+    // A pinned node. Bring it to the front
+    snIds.splice(indexOfNodeId, 1)
+    snIds.push(nodeId)
+    selectedPreviewNodeId.value = undefined
+  } else {
+    // Just preview it
+    selectedPreviewNodeId.value = nodeId
+  }
+}
+
+function pinCommitDetails(nodeId: NodeId) {
+  const snIds = selectedPinnedNodeIds.value
+  const indexOfNodeId = snIds.indexOf(nodeId)
+  if (indexOfNodeId >= 0) {
+    snIds.splice(indexOfNodeId, 1)
+  }
+  snIds.push(nodeId)
+  selectedPreviewNodeId.value = undefined
+}
+
+const selectedNodesToDraw = computedL('selectedNodesToDraw', () => {
+  const snPinnedIds = selectedPinnedNodeIds.value
+  const snPreviewId = selectedPreviewNodeId.value
+  const ntd = nodesToDraw.value
+  const snToDraw = snPinnedIds.map(id => ({
+    id: id,
+    y: ntd[id]!.y,
+    c: ntd[id]!.c,
+    data: commits[id]!.data,
+    pinned: true,
+  }))
+  if (snPreviewId !== undefined && !snPinnedIds.includes(snPreviewId)) {
+    snToDraw.push({
+      id: snPreviewId,
+      y: ntd[snPreviewId]!.y,
+      c: ntd[snPreviewId]!.c,
+      data: commits[snPreviewId]!.data,
+      pinned: false,
+    })
+  }
+  return snToDraw
+})
+
 const colorMap = [
   '#0085d9',
   '#d9008f',
@@ -131,12 +192,26 @@ const colorMap = [
   '#ffcc00',
 ]
 
+const commitDetailsWidth = 600
+const commitDetailsHeight = 250
+const commitDetailsLeftOffset = 35
+
+function commitDetailsPolygon(y: number) {
+  const xO = 0
+  const xL = commitDetailsLeftOffset
+  const xR = commitDetailsLeftOffset + commitDetailsWidth
+  const yO = y
+  const yT = y - (commitDetailsHeight / 2)
+  const yB = y + (commitDetailsHeight / 2)
+  return `${xO},${yO} ${xL},${yT} ${xR},${yT} ${xR},${yB} ${xL},${yB}`
+}
+
 </script>
 
 <template>
   <div class="graph-grid-container">
     <table class="graph-content-container" v-memo="[ commits ]">
-      <tr v-for="(node, r) in commits" :key="r" class="graph-row" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight">
+      <tr v-for="(node, r) in commits" :key="r" class="graph-row" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight"  @click="selectNodeAndBringToFront(node.id)">
         <td class="node-description"><NodeDescription :node-data="node.data" :color="colorMap[nodesToDraw[r]!.c % colorMap.length]" /></td>
       </tr>
     </table>
@@ -157,11 +232,37 @@ const colorMap = [
       </svg>
     </div>
 
+    <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg" :width="commitDetailsWidth" :height="unit * commits.length">
+      <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow" @click="selectNodeAndBringToFront(sn.id)">
+        <polygon :points="commitDetailsPolygon(sn.y)" stroke-width="2" fill="black" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
+        <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
+          <div xmlns="http://www.w3.org/1999/xhtml" style="height: inherit;">
+            <CommitDetails :node-data="sn.data" :pinned="sn.pinned" @close="closeCommitDetails(sn.id)" @pin="pinCommitDetails(sn.id)" />
+          </div>
+        </foreignObject>
+      </g>
+    </svg>
   </div>
 
 </template>
 
 <style scoped>
+
+.commit-details-svg {
+  position: absolute;
+  top: 0;
+  left: 600px;
+  bottom: 0;
+  right: 0;
+
+  overflow: visible;
+
+  z-index: 2;
+}
+
+.shadow {
+  filter: drop-shadow(0px 0px 10px black);
+}
 
 .graph-svg {
   position: absolute;

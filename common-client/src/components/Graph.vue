@@ -50,25 +50,54 @@ const edgesToDraw = computedL('edgesToDraw', () => renderData.value[2].map(x => 
 const highlightedNodeId = ref<NodeId>()
 const highlightedEdgeId = ref<EdgeId>()
 const emptyNodeIdSet: NodeId[] = []
+const highlightedNodeIdComputed = computedL('highlightedNodeIdComputed', () => {
+  const hNodeId = highlightedNodeId.value
+  const hEdgeId = highlightedEdgeId.value
+  const eToDraw = edgesToDraw.value
+
+  if (hNodeId !== undefined) {
+    return hNodeId
+  }
+  if (hEdgeId !== undefined) {
+    const hEdge = eToDraw[hEdgeId]
+    if (hEdge !== undefined) {
+      return hEdge.from
+    }
+  }
+})
 const highlightedParentNodeIds = computedL('highlightedParentNodeIds', () => {
   const hNodeId = highlightedNodeId.value
-  if (hNodeId === undefined) {
+  const hEdgeId = highlightedEdgeId.value
+  const eToDraw = edgesToDraw.value
+  if (hNodeId === undefined && hEdgeId === undefined) {
     return emptyNodeIdSet
+  } else if (hNodeId === undefined) {
+    const hEdge = eToDraw[hEdgeId!]
+    if (hEdge === undefined) {
+      return emptyNodeIdSet
+    }
+    return [ hEdge.to ]
+  } else {
+    const hNode = commits[hNodeId]
+    if (hNode === undefined) {
+      return emptyNodeIdSet
+    }
+    return hNode.parents
   }
-  const hNode = commits[hNodeId]
-  if (hNode === undefined) {
-    return emptyNodeIdSet
-  }
-  return hNode.parents
 })
 
 const emptyEdgeIdSet = new Set<number>()
 const highlightedEdges = computedL('highlightedEdges', () => {
   const hNodeId = highlightedNodeId.value
-  if (hNodeId === undefined) {
+  const hEdgeId = highlightedEdgeId.value
+  const eToDraw = edgesToDraw.value
+  if (hNodeId === undefined && hEdgeId === undefined) {
     return emptyEdgeIdSet
+  } else if (hNodeId === undefined) {
+    return new Set([ hEdgeId! ])
+  } else {
+    return new Set(eToDraw.map((e, i) => [ e, i ] as const).filter(([ e, i ]) => e.from === hNodeId).map(([ e, i ]) => i))
   }
-  return new Set(edgesToDraw.value.map((e, i) => [ e, i ] as const).filter(([ e, i ]) => e.from === hNodeId).map(([ e, i ]) => i))
 })
 
 function highlightNode(nodeId: NodeId) {
@@ -117,7 +146,7 @@ const colorMap = [
           :nodes-to-draw="nodesToDraw"
           :edges-to-draw="edgesToDraw"
           :color-map="colorMap"
-          :highlighted-node-id="highlightedNodeId"
+          :highlighted-node-id="highlightedNodeIdComputed"
           :highlighted-parent-node-ids="highlightedParentNodeIds"
           :highlighted-edges="highlightedEdges"
           @mouse-enter-node="highlightNode"

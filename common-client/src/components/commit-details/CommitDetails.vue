@@ -7,6 +7,8 @@ SPDX-License-Identifier: LGPL-3.0-only
 <script setup lang="ts">
 import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
 import CommitDetailsDiff from './diff';
+import { provide } from 'vue';
+import { COMMIT_ID_INJECTION_KEY } from '@common-client/providers/commit-id-provider';
 import IdPrefix from '../IdPrefix.vue';
 
 type ThisComponentProps = {
@@ -19,6 +21,10 @@ const { nodeData, pinned } = defineProps<ThisComponentProps>()
 type ThisComponentEmits = {
   (e: 'close'): void
   (e: 'pin'): void
+}
+
+if (nodeData?.type === 'commit' || nodeData?.type === 'commitId') {
+  provide(COMMIT_ID_INJECTION_KEY, nodeData.commitId)
 }
 
 const emit = defineEmits<ThisComponentEmits>()

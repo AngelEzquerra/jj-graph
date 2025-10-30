@@ -5,8 +5,13 @@ SPDX-License-Identifier: LGPL-3.0-only
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
 import { type DiffSummaryTree } from '@common/jj-graph-parser/diff-summary-parser';
+import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
+import { COMMIT_ID_INJECTION_KEY } from '@common-client/providers/commit-id-provider';
+
+const actions = inject(GRAPH_ACTIONS_INJECTION_KEY)!
+const commitId = inject(COMMIT_ID_INJECTION_KEY)!
 
 type ThisComponentProps = {
   tree: DiffSummaryTree
@@ -24,7 +29,7 @@ function toggleExpanded() {
 
 <template>
   <template v-if="tree.type === 'leaf'">
-    <div class="file" :class="[ `status-${tree.item.status}` ]"><span>{{ tree.path }}</span></div>
+    <div class="file" :class="[ `status-${tree.item.status}` ]"><span @click="actions.viewDiff(commitId, tree.item.path)">{{ tree.path }}</span></div>
   </template>
   <template v-else-if="tree.type === 'tree'">
     <template v-if="!tree.path">

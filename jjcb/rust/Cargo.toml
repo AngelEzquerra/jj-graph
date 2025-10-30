@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2025 Velociraptor115
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+
+[package]
+name = "jjcb"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "jjcb"
+path = "main.rs"
+
+[profile.release]
+strip = "symbols"
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

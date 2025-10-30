@@ -5,7 +5,13 @@ SPDX-License-Identifier: LGPL-3.0-only
 -->
 
 <script setup lang="ts">
+import { COMMIT_ID_INJECTION_KEY } from '@common-client/providers/commit-id-provider';
+import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 import { type DiffSummaryItem } from '@common/jj-graph-parser/diff-summary-parser';
+import { inject } from 'vue';
+
+const actions = inject(GRAPH_ACTIONS_INJECTION_KEY)!
+const commitId = inject(COMMIT_ID_INJECTION_KEY)!
 
 type ThisComponentProps = {
   item: DiffSummaryItem
@@ -16,7 +22,7 @@ const { item } = defineProps<ThisComponentProps>()
 </script>
 
 <template>
-  <div class="file" :class="[ `status-${item.status}` ]"><span>{{ item.path }}</span></div>
+  <div class="file" :class="[ `status-${item.status}` ]" @click="actions.viewDiff(commitId, item.path)"><span>{{ item.path }}</span></div>
 </template>
 
 <style scoped>

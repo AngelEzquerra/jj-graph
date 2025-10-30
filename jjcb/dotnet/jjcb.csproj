@@ -1,0 +1,48 @@
+﻿<!--
+SPDX-FileCopyrightText: 2025 Velociraptor115
+
+SPDX-License-Identifier: LGPL-3.0-only
+-->
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <RootNamespace>JJCallbacks</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishTrimmed>true</PublishTrimmed>
+
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <EventSourceSupport>false</EventSourceSupport>
+    <Http3Support>false</Http3Support>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <MetricsSupport>false</MetricsSupport>
+    <StackTraceSupport>false</StackTraceSupport>
+    <UseNativeHttpHandler>true</UseNativeHttpHandler>
+    <UseSizeOptimizedLinq>true</UseSizeOptimizedLinq>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <XmlResolverIsNetworkingEnabledByDefault>false</XmlResolverIsNetworkingEnabledByDefault>
+  </PropertyGroup>
+
+  <!-- <PropertyGroup>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup> -->
+
+</Project>

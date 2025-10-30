@@ -7,12 +7,13 @@ SPDX-License-Identifier: Apache-2.0
 <script setup lang="ts">
 
 import * as api from '@common/api'
-import { effect, ref, useTemplateRef } from 'vue';
+import { effect, provide, ref, useTemplateRef } from 'vue';
 import Graph from '@common-client/components/Graph.vue';
 import DevTestOptions from '@common-client/components/DevTestOptions.vue';
 import { useDevTestOptionsStore } from '@common-client/stores/devTestOptions';
 import { useRepoSourceStore, generateInlineGraph } from '@common-client/stores/repoSource';
 import { storeToRefs } from 'pinia';
+import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 
 type NodeId = number
 type GraphNode<NodeData> = {
@@ -67,6 +68,22 @@ effect(() => {
       logNodes.value = generateInlineGraph(gs.value).nodes
     }
   }
+})
+
+function handleViewDiff(commitId: string, path: string) {
+  const gs = graphSource.value
+  console.log('handleViewDiff', commitId, path)
+  if (gs?.type === 'repo') {
+    const req = api.viewDiff(gs.value, commitId, path)
+    console.log('req', req)
+    vscode.postMessage(req)
+  } else {
+    console.warn("Trying to view diff of inline-generated graph")
+  }
+}
+
+provide(GRAPH_ACTIONS_INJECTION_KEY, {
+  viewDiff: handleViewDiff,
 })
 
 </script>

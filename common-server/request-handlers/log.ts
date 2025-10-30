@@ -2,49 +2,11 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-only
 
-import { ChildProcess, spawn } from 'child_process'
-import * as api from '@common/api'
+import * as api from '@common/api/log'
+import { invokeJJ } from '@/jj';
 import { createJJCommitGraphParser } from '@common/jj-graph-parser/commit-graph-parser';
 import { createJJGraphParserCurved } from '@common/jj-graph-parser/graph-parser';
-
-function invokeJJ(repoPath: string, cmdArgs: string[]): ChildProcess {
-  console.log('invoking jj with args', cmdArgs.join(" "))
-  return spawn('jj', cmdArgs, { cwd: repoPath })
-}
-
-async function handleCp(cp: ChildProcess) {
-  return new Promise<[string, string]>((resolve, reject) => {
-    const output: Buffer[] = [];
-    const errOutput: Buffer[] = [];
-    cp.stdout!.on("data", (data: Buffer) => {
-      output.push(data);
-    });
-    cp.stderr!.on("data", (data: Buffer) => {
-      errOutput.push(data);
-    });
-    cp.on("error", (error: Error) => {
-      reject(new Error(`Spawning command failed: ${error.message}`));
-    });
-    cp.on("close", (code, signal) => {
-      if (code) {
-        reject(
-          new Error(
-            `Command failed with exit code ${code}.\nstdout: ${Buffer.concat(output).toString()}\nstderr: ${Buffer.concat(errOutput).toString()}`,
-          ),
-        );
-      } else if (signal) {
-        reject(
-          new Error(
-            `Command failed with signal ${signal}.\nstdout: ${Buffer.concat(output).toString()}\nstderr: ${Buffer.concat(errOutput).toString()}`,
-          ),
-        );
-      } else {
-        resolve([Buffer.concat(output).toString(), Buffer.concat(errOutput).toString()]);
-      }
-    });
-  });
-}
-
+import type { IntegrationProvider } from '@/integration';
 
 type TObject = string
 type TObjectField = string
@@ -118,21 +80,11 @@ function argsForJJCommitLog(revset?: string) {
 const graphParserCurved = createJJGraphParserCurved()
 const commitGraphParser = createJJCommitGraphParser()
 
-async function handleJJCommitLogInvocation(request: api.JJApiRequest) {
-  const [cpStdio, cpStderr] = await handleCp(invokeJJ(request.repoDir, argsForJJCommitLog(request.revset)))
+export async function handleRequest(request: api.RequestParameters, ip: IntegrationProvider): Promise<api.Response> {
+  const [cpStdio, cpStderr] = await invokeJJ(request.repoDir, argsForJJCommitLog(request.revset))
   // console.log(cpStdio)
   const graphParsed = graphParserCurved.parseJJGraph(cpStdio)
   // console.log(graphParsed.nodes)
   const commitGraphParsed = commitGraphParser.parseJJCommitGraph(graphParsed)
   return commitGraphParsed
-}
-
-export async function handleRequest(request: api.JJApiRequest): Promise<api.JJApiResponse> {
-  switch (request.request) {
-    case api.REQUEST_LOG:
-      const logOutput = await handleJJCommitLogInvocation(request)
-      return { ...request, response: { commits: logOutput.nodes } }
-    default:
-      return { ...request, response: 'Unknown request' }
-  }
 }

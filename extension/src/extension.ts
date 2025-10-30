@@ -4,27 +4,38 @@
 
 import * as vscode from 'vscode';
 import * as path from "path";
-import { handleRequest } from "@common-server/jj-backend";
+import { handleRequest } from "@common-server/index";
+import { type IntegrationProvider } from '@common-server/integration';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "vscode-jj-graph" activated');
 
-	const disposable = vscode.commands.registerCommand(
+  const ip: IntegrationProvider = {
+    listRepos() {
+      // Return workspace folder paths
+      return (
+        (vscode.workspace.workspaceFolders ?? [])
+          .map(x => x.uri)
+          .filter(x => x.scheme === 'file')
+          .map(x => x.fsPath)
+      )
+    },
+  }
+
+  context.subscriptions.push(vscode.commands.registerCommand(
     'vscode-jj-graph.openNewTab',
     () => {
       const panel = prepareWebView(context);
       panel.webview.onDidReceiveMessage(
           async (message) => {
-              const response = await handleRequest(message)
+              const response = await handleRequest(message, ip)
               panel.webview.postMessage(response)
           },
           undefined,
           context.subscriptions
       );
-	  }
-  );
-
-	context.subscriptions.push(disposable);
+    }
+  ));
 }
 
 // This method is called when your extension is deactivated

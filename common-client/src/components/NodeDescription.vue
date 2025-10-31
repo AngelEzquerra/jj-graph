@@ -36,6 +36,30 @@ const bookmarks = computed<JJBookmark[]>(() => {
   }
   return items
 })
+
+const DESCRIPTION_TEXT_ROOT = '(root)'
+const DESCRIPTION_TEXT_NOT_SET = '(no description set)'
+const DESCRIPTION_TEXT_ELIDED = '(elided revisions)'
+const DESCRIPTION_TEXT_ONLY_COMMIT_ID = '(only commit_id found)'
+
+const descriptionText = computed(() => {
+  if (nodeData?.type === 'commit') {
+    if (nodeData.commitId.split('').every(x => x === '0')) {
+      return DESCRIPTION_TEXT_ROOT
+    } else if (nodeData.description) {
+      return nodeData.description
+    } else {
+      return DESCRIPTION_TEXT_NOT_SET
+    }
+  } else if (nodeData?.type === 'elided') {
+    return DESCRIPTION_TEXT_ELIDED
+  } else if (nodeData?.type === 'commitId') {
+    return DESCRIPTION_TEXT_ONLY_COMMIT_ID
+  } else {
+    return DESCRIPTION_TEXT_ELIDED
+  }
+})
+
 </script>
 
 <template>
@@ -53,18 +77,16 @@ const bookmarks = computed<JJBookmark[]>(() => {
         <span class="pill-color" :style="{ backgroundColor: color }"></span>
         <span class="tag-name">{{ tag.name }}</span>
       </span>
-      <span v-if="nodeData.commitId.split('').every(x => x === '0')">Root</span>
-      <span v-else-if="nodeData.description">{{ nodeData.description }}</span>
-      <span v-else>(no description set)</span>
+      <span class="description-text">{{ descriptionText }}</span>
     </template>
     <template v-else-if="nodeData.type === 'elided'">
-      <span class="elided-revision faded">(elided revisions)</span>
+      <span class="description-text elided-revision faded">{{ DESCRIPTION_TEXT_ELIDED }}</span>
     </template>
     <template v-else-if="nodeData.type === 'commitId' && nodeData.commitId">
-      <span>Commit: {{ nodeData.commitId }}</span>
+      <span>{{ DESCRIPTION_TEXT_ONLY_COMMIT_ID }}</span>
     </template>
     <template v-else>
-      <span class="elided-revision faded">(elided revisions)</span>
+      <span class="description-text elided-revision faded">{{ DESCRIPTION_TEXT_ELIDED }}</span>
     </template>
   </template>
 </template>
@@ -108,6 +130,14 @@ const bookmarks = computed<JJBookmark[]>(() => {
 .bookmark-remote {
   padding-inline: 4px;
   border-left: 1px solid rgba(128, 128, 128, 0.75);
+}
+
+.description-text {
+  display: inline-block;
+  text-overflow: ellipsis;
+  width: 0;
+  flex-grow: 1;
+  overflow: clip;
 }
 
 </style>

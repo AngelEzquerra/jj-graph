@@ -192,11 +192,12 @@ const colorMap = [
   '#ffcc00',
 ]
 
-const commitDetailsWidth = 600
+const commitDetailsWidth = 1000
 const commitDetailsHeight = 250
 const commitDetailsLeftOffset = 35
 
 function commitDetailsPolygon(y: number) {
+  // O - origin, L - left, R - right, T - top, B - bottom
   const xO = 0
   const xL = commitDetailsLeftOffset
   const xR = commitDetailsLeftOffset + commitDetailsWidth
@@ -209,39 +210,56 @@ function commitDetailsPolygon(y: number) {
 </script>
 
 <template>
-  <div class="graph-grid-container">
-    <table class="graph-content-container" v-memo="[ commits ]">
-      <tr v-for="(node, r) in commits" :key="r" class="graph-row" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight"  @click="selectNodeAndBringToFront(node.id)">
-        <td class="node-description"><NodeDescription :node-data="node.data" :color="colorMap[nodesToDraw[r]!.c % colorMap.length]" /></td>
-      </tr>
-    </table>
-    <div class="graph-container">
-      <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg" :width="unit * graphColumnCount" :height="unit * commits.length">
-        <GraphLayer
-          :nodes-to-draw="nodesToDraw"
-          :edges-to-draw="edgesToDraw"
-          :color-map="colorMap"
-          :highlighted-node-id="highlightedNodeIdComputed"
-          :highlighted-parent-node-ids="highlightedParentNodeIds"
-          :highlighted-edges="highlightedEdges"
-          @mouse-enter-node="highlightNode"
-          @mouse-leave-node="removeNodeHighlight"
-          @mouse-enter-edge="highlightEdge"
-          @mouse-leave-edge="removeEdgeHighlight"
-        />
-      </svg>
-    </div>
+  <div class="flex">
+    <table class="table-layout table-border user-select-none flex-grow">
+      <thead>
+        <tr>
+          <th class="px-2 graph-table-header">Graph</th>
+          <th class="px-2 graph-table-header">Description</th>
 
-    <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg" :width="commitDetailsWidth" :height="unit * commits.length">
-      <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow" @click="selectNodeAndBringToFront(sn.id)">
-        <polygon :points="commitDetailsPolygon(sn.y)" stroke-width="2" fill="black" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
-        <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
-          <div xmlns="http://www.w3.org/1999/xhtml" style="height: inherit;">
-            <CommitDetails :node-data="sn.data" :pinned="sn.pinned" @close="closeCommitDetails(sn.id)" @pin="pinCommitDetails(sn.id)" />
-          </div>
-        </foreignObject>
-      </g>
-    </svg>
+          <th class="px-2 graph-table-header">Date</th>
+          <th class="px-2 graph-table-header">Author</th>
+          <th class="px-2 graph-table-header">Change</th>
+          <th class="px-2 graph-table-header">Commit</th>
+        </tr>
+      </thead>
+      <tbody class="graph-grid-container">
+        <tr v-for="(node, r) in commits" :key="r" class="graph-row" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight" @click="selectNodeAndBringToFront(node.id)">
+          <td class="px-2"></td>
+          <td class="px-2 node-description"><NodeDescription :node-data="node.data" :color="colorMap[nodesToDraw[r]!.c % colorMap.length]" /></td>
+          <td class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.author.timestamp : '' }}</pre></td>
+          <td class="px-2"><span>{{ node.data?.type === 'commit' ? node.data.author.name : '' }}</span></td>
+          <td class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.changeId : '' }}</pre></td>
+          <td class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.commitId : '' }}</pre></td>
+        </tr>
+        <div class="graph-container">
+          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg" :width="unit * graphColumnCount" :height="unit * commits.length">
+            <GraphLayer
+              :nodes-to-draw="nodesToDraw"
+              :edges-to-draw="edgesToDraw"
+              :color-map="colorMap"
+              :highlighted-node-id="highlightedNodeIdComputed"
+              :highlighted-parent-node-ids="highlightedParentNodeIds"
+              :highlighted-edges="highlightedEdges"
+              @mouse-enter-node="highlightNode"
+              @mouse-leave-node="removeNodeHighlight"
+              @mouse-enter-edge="highlightEdge"
+              @mouse-leave-edge="removeEdgeHighlight"
+            />
+          </svg>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length">
+          <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow pointer-events-all" @click="selectNodeAndBringToFront(sn.id)">
+            <polygon :points="commitDetailsPolygon(sn.y)" stroke-width="2" fill="black" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
+            <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
+              <div xmlns="http://www.w3.org/1999/xhtml" style="height: inherit;">
+                <CommitDetails :node-data="sn.data" :pinned="sn.pinned" @close="closeCommitDetails(sn.id)" @pin="pinCommitDetails(sn.id)" />
+              </div>
+            </foreignObject>
+          </g>
+        </svg>
+      </tbody>
+    </table>
   </div>
 
 </template>
@@ -280,13 +298,14 @@ function commitDetailsPolygon(y: number) {
   --content-width: 400px;
 }
 
-.graph-content-container {
+.table-layout {
   border-spacing: 0;
-  table-layout: fixed;
-  width: calc(var(--graph-width) + var(--content-width));
+  border-collapse: collapse;
+  /* table-layout: fixed; */
+  /* width: calc(var(--graph-width) + var(--content-width)); */
 }
 
-.graph-content-container {
+.user-select-none {
   user-select: none;
 }
 
@@ -315,11 +334,36 @@ function commitDetailsPolygon(y: number) {
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  margin-left: var(--graph-width);
+  /* margin-left: var(--graph-width); */
   align-items: center;
+
+  /* width: 600px; */
 }
 
 .pointer-events-all {
   pointer-events: all;
 }
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.px-2 {
+  padding-inline: 0.5rem;
+}
+
+.graph-table-header {
+  font-weight: bold;
+
+  border: 1px solid rgba(128, 128, 128, 0.5);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
 </style>

@@ -13,6 +13,7 @@ import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph
 import GraphLayer from './GraphLayer.vue'
 import CommitDetails from './commit-details/CommitDetails.vue'
 import { type NodeColumnGenOptions } from '@common/jj-graph-renderer/layout'
+import CommitOverview from './commit-overview/CommitOverview.vue'
 
 type NodeId = number
 type EdgeId = number
@@ -213,6 +214,7 @@ function commitDetailsPolygon(y: number) {
   <div class="flex">
     <div class="grid-layout user-select-none flex-grow">
       <div class="px-2 grid-header">Graph</div>
+      <div class="px-2 grid-header">Commands</div>
       <div class="px-2 grid-header">Description</div>
 
       <div class="px-2 grid-header">Date</div>
@@ -220,13 +222,19 @@ function commitDetailsPolygon(y: number) {
       <div class="px-2 grid-header">Change</div>
       <div class="px-2 grid-header">Commit</div>
       <div class="graph-grid-container">
-        <div v-for="(node, r) in commits" :key="r" class="display-contents" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight" @click="selectNodeAndBringToFront(node.id)">
-          <div class="px-2"></div>
-          <div class="px-2 node-description"><NodeDescription :node-data="node.data" :color="colorMap[nodesToDraw[r]!.c % colorMap.length]" /></div>
-          <div class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.author.timestamp : '' }}</pre></div>
-          <div class="px-2"><span>{{ node.data?.type === 'commit' ? node.data.author.name : '' }}</span></div>
-          <div class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.changeId : '' }}</pre></div>
-          <div class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.commitId : '' }}</pre></div>
+        <div class="display-contents">
+          <CommitOverview
+            v-for="(node, r) in commits"
+            v-memo="[ commits, nodesToDraw, highlightedNodeId === r, selectedPreviewNodeId === r || selectedPinnedNodeIds.includes(r) ]"
+            :key="r"
+            :node-data="node.data!"
+            :color="colorMap[nodesToDraw[r]!.c % colorMap.length]!"
+            :highlighted="highlightedNodeId === r"
+            :selected="selectedPreviewNodeId === r || selectedPinnedNodeIds.includes(r)"
+            @mouseenter="highlightNode(node.id)"
+            @mouseleave="removeNodeHighlight"
+            @click="selectNodeAndBringToFront(node.id)"
+          />
         </div>
         <div class="graph-container pointer-events-none">
           <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-none" :width="unit * graphColumnCount" :height="unit * commits.length">
@@ -265,9 +273,9 @@ function commitDetailsPolygon(y: number) {
 .commit-details-svg {
   position: absolute;
   top: 0;
-  left: 600px;
+  /* left: 0; */
   bottom: 0;
-  right: 0;
+  right: 200px;
 
   overflow: visible;
 
@@ -360,7 +368,7 @@ function commitDetailsPolygon(y: number) {
 .grid-layout {
   display: grid;
 
-  grid-template-columns: 300px 5fr repeat(2, 1fr) max-content max-content;
+  grid-template-columns: 300px 1fr 5fr repeat(2, 1fr) max-content max-content;
 }
 
 .graph-grid-container {

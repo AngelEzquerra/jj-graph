@@ -211,29 +211,25 @@ function commitDetailsPolygon(y: number) {
 
 <template>
   <div class="flex">
-    <table class="table-layout table-border user-select-none flex-grow">
-      <thead>
-        <tr>
-          <th class="px-2 graph-table-header">Graph</th>
-          <th class="px-2 graph-table-header">Description</th>
+    <div class="grid-layout user-select-none flex-grow">
+      <div class="px-2 grid-header">Graph</div>
+      <div class="px-2 grid-header">Description</div>
 
-          <th class="px-2 graph-table-header">Date</th>
-          <th class="px-2 graph-table-header">Author</th>
-          <th class="px-2 graph-table-header">Change</th>
-          <th class="px-2 graph-table-header">Commit</th>
-        </tr>
-      </thead>
-      <tbody class="graph-grid-container">
-        <tr v-for="(node, r) in commits" :key="r" class="graph-row" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight" @click="selectNodeAndBringToFront(node.id)">
-          <td class="px-2"></td>
-          <td class="px-2 node-description"><NodeDescription :node-data="node.data" :color="colorMap[nodesToDraw[r]!.c % colorMap.length]" /></td>
-          <td class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.author.timestamp : '' }}</pre></td>
-          <td class="px-2"><span>{{ node.data?.type === 'commit' ? node.data.author.name : '' }}</span></td>
-          <td class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.changeId : '' }}</pre></td>
-          <td class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.commitId : '' }}</pre></td>
-        </tr>
-        <div class="graph-container">
-          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg" :width="unit * graphColumnCount" :height="unit * commits.length">
+      <div class="px-2 grid-header">Date</div>
+      <div class="px-2 grid-header">Author</div>
+      <div class="px-2 grid-header">Change</div>
+      <div class="px-2 grid-header">Commit</div>
+      <div class="graph-grid-container">
+        <div v-for="(node, r) in commits" :key="r" class="display-contents" @mouseenter="highlightNode(node.id)" @mouseleave="removeNodeHighlight" @click="selectNodeAndBringToFront(node.id)">
+          <div class="px-2"></div>
+          <div class="px-2 node-description"><NodeDescription :node-data="node.data" :color="colorMap[nodesToDraw[r]!.c % colorMap.length]" /></div>
+          <div class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.author.timestamp : '' }}</pre></div>
+          <div class="px-2"><span>{{ node.data?.type === 'commit' ? node.data.author.name : '' }}</span></div>
+          <div class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.changeId : '' }}</pre></div>
+          <div class="px-2"><pre>{{ node.data?.type === 'commit' ? node.data.commitId : '' }}</pre></div>
+        </div>
+        <div class="graph-container pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-none" :width="unit * graphColumnCount" :height="unit * commits.length">
             <GraphLayer
               :nodes-to-draw="nodesToDraw"
               :edges-to-draw="edgesToDraw"
@@ -248,7 +244,7 @@ function commitDetailsPolygon(y: number) {
             />
           </svg>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length">
+        <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length" :width="commitDetailsWidth">
           <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow pointer-events-all" @click="selectNodeAndBringToFront(sn.id)">
             <polygon :points="commitDetailsPolygon(sn.y)" stroke-width="2" fill="black" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
             <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
@@ -258,8 +254,8 @@ function commitDetailsPolygon(y: number) {
             </foreignObject>
           </g>
         </svg>
-      </tbody>
-    </table>
+      </div>
+    </div>
   </div>
 
 </template>
@@ -298,13 +294,6 @@ function commitDetailsPolygon(y: number) {
   --content-width: 400px;
 }
 
-.table-layout {
-  border-spacing: 0;
-  border-collapse: collapse;
-  /* table-layout: fixed; */
-  /* width: calc(var(--graph-width) + var(--content-width)); */
-}
-
 .user-select-none {
   user-select: none;
 }
@@ -317,14 +306,6 @@ function commitDetailsPolygon(y: number) {
   width: var(--graph-width);
   overflow-x: auto;
   overflow-y: hidden; /* Why do we need this workaround. Let's see if we can fix it sometime */
-}
-
-.graph-row {
-  cursor: pointer;
-}
-
-.graph-row:hover {
-  background-color: rgba(128, 128, 128, 0.15);
 }
 
 .node-description {
@@ -352,10 +333,20 @@ function commitDetailsPolygon(y: number) {
   padding-inline: 0.5rem;
 }
 
-.graph-table-header {
+.grid-header {
   font-weight: bold;
 
-  border: 1px solid rgba(128, 128, 128, 0.5);
+  border-block: 1px solid rgba(128, 128, 128, 0.5);
+  padding: 6px 12px;
+}
+
+.grid-header {
+  position: sticky;
+  top: 0;
+
+  background-color: black;
+
+  z-index: 1;
 }
 
 .flex {
@@ -364,6 +355,23 @@ function commitDetailsPolygon(y: number) {
 
 .flex-grow {
   flex-grow: 1;
+}
+
+.grid-layout {
+  display: grid;
+
+  grid-template-columns: 300px 5fr repeat(2, 1fr) max-content max-content;
+}
+
+.graph-grid-container {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  grid-auto-rows: calc(v-bind('unit') * 1px);
+}
+
+.display-contents {
+  display: contents;
 }
 
 </style>

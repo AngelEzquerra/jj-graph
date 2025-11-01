@@ -6,6 +6,7 @@ SPDX-License-Identifier: LGPL-3.0-only
 
 <script setup lang="ts">
 import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
+import { Bookmark, Tag } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 type ThisComponentProps = {
@@ -69,14 +70,14 @@ const descriptionText = computed(() => {
       <span v-if="nodeData.isEmpty" class="chip chip-content">empty</span>
       <template v-if="bookmarks?.length > 0">
         <span v-for="b in bookmarks" class="bookmark">
-          <span class="pill-color" :style="{ backgroundColor: color }"></span>
+          <span class="pill" :style="{ backgroundColor: color }"><Bookmark :size="16" /></span>
           <span class="bookmark-name">{{ b.name }}</span>
           <span class="bookmark-local faded" v-if="b.local">jj</span>
           <span class="bookmark-remote" v-for="remote in b.remotes">{{ remote }}</span>
         </span>
       </template>
       <span v-for="tag in nodeData.tags" class="tag">
-        <span class="pill-color" :style="{ backgroundColor: color }"></span>
+        <span class="pill" :style="{ backgroundColor: color }"><Tag :size="16" /></span>
         <span class="tag-name">{{ tag.name }}</span>
       </span>
       <span class="description-text">{{ descriptionText }}</span>
@@ -94,9 +95,14 @@ const descriptionText = computed(() => {
 </template>
 
 <style scoped>
+.pill {
+  width: 20px;
 
-.pill-color {
-  width: 16px;
+  display: inline-flex;
+  justify-content: space-around;
+  align-items: center;
+
+  color: black;
 }
 
 .chip,

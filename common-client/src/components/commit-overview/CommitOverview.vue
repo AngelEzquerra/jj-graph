@@ -11,6 +11,8 @@ import { inject } from 'vue';
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 import IdPrefix from '../IdPrefix.vue';
 import { LogIn, Pencil, ArrowUpFromDot, ArrowDownToDot, Trash2, Plus } from "lucide-vue-next";
+import DownPlus from '@common-client/icons/DownPlus.vue';
+import UpPlus from '@common-client/icons/UpPlus.vue';
 
 const actions = inject(GRAPH_ACTIONS_INJECTION_KEY)!
 
@@ -44,8 +46,8 @@ const emit = defineEmits<ThisComponentEmits>()
           <button class="command" title="Edit"          @click.stop="actions.edit(nodeData.changeId)"                           :disabled="nodeData.isWorkingCopy || nodeData.isImmutable"                          ><LogIn :size="20" /></button>
           <button class="command" title="Describe"      @click.stop="actions.describe(nodeData.changeId, nodeData.description)" :disabled="nodeData.isImmutable"                                                    ><Pencil :size="20" /></button>
           <button class="command" title="New"           @click.stop="actions.newFrom(nodeData.changeId)"                                                                                                            ><Plus :size="20" stroke-width="3" /></button>
-          <button class="command" title="Insert After"  @click.stop="actions.newAfter(nodeData.changeId)"                                                                                                           ><ArrowUpFromDot :size="20" /></button>
-          <button class="command" title="Insert Before" @click.stop="actions.newBefore(nodeData.changeId)"                      :disabled="nodeData.isImmutable"                                                    ><ArrowDownToDot :size="20" /></button>
+          <button class="command" title="Insert After"  @click.stop="actions.newAfter(nodeData.changeId)"                                                                                                           ><UpPlus :width="20" :height="20" /></button>
+          <button class="command" title="Insert Before" @click.stop="actions.newBefore(nodeData.changeId)"                      :disabled="nodeData.isImmutable"                                                    ><DownPlus :width="20" :height="20" /></button>
           <button class="command" title="Abandon"       @click.stop="actions.abandon(nodeData.changeId)"                        :disabled="nodeData.isImmutable || !nodeData.isEmpty || nodeData.parents.length > 1"><Trash2 :size="20" /></button>
         </template>
       </div>

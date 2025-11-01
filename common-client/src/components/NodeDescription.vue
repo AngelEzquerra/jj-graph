@@ -65,6 +65,8 @@ const descriptionText = computed(() => {
 <template>
   <template v-if="nodeData">
     <template v-if="nodeData.type === 'commit'">
+      <span v-if="nodeData.isWorkingCopy" class="chip chip-content">@</span>
+      <span v-if="nodeData.isEmpty" class="chip chip-content">empty</span>
       <template v-if="bookmarks?.length > 0">
         <span v-for="b in bookmarks" class="bookmark">
           <span class="pill-color" :style="{ backgroundColor: color }"></span>
@@ -97,6 +99,7 @@ const descriptionText = computed(() => {
   width: 16px;
 }
 
+.chip,
 .bookmark,
 .tag {
   flex: auto 0 0;
@@ -104,6 +107,7 @@ const descriptionText = computed(() => {
   overflow: hidden;
 }
 
+.chip,
 .bookmark,
 .tag {
   border-radius: 4px;
@@ -120,6 +124,7 @@ const descriptionText = computed(() => {
   color: rgba(204, 204, 204, 0.45);
 }
 
+.chip-content,
 .tag-name,
 .bookmark-name {
   padding-inline: 4px;

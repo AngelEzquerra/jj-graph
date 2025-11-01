@@ -33,6 +33,8 @@ const { graphSource, knownGraphSources } = storeToRefs(repoSourceStore)
 const { updateRepoList } = repoSourceStore
 
 const loadingDialog = useTemplateRef('loadingDialog')
+const describeInputDialog = useTemplateRef('describeInputDialog')
+const describeInput = ref<string>('')
 
 window.addEventListener('message', event => {
   console.log('Message Handled', event)
@@ -50,13 +52,20 @@ window.addEventListener('message', event => {
       loadingDialog.value?.close()
       break;
     }
+    case api.REQUEST_EDIT:
+    case api.REQUEST_ABANDON:
+    case api.REQUEST_NEW_CHANGE:
+    case api.REQUEST_DESCRIBE: {
+      refreshLog()
+      break;
+    }
   }
 })
 
 const vscode = window.acquireVsCodeApi()
 vscode.postMessage(api.listRepos())
 
-effect(() => {
+function refreshLog() {
   const gs = graphSource.value
   const kgs = knownGraphSources.value
   console.log('doing effect with gs', gs)
@@ -68,29 +77,82 @@ effect(() => {
       logNodes.value = generateInlineGraph(gs.value).nodes
     }
   }
-})
+}
 
-function handleViewDiff(commitId: string, path: string) {
+effect(refreshLog)
+
+function postIfJJRepo(action: string, genReq: (repoPath: string) => unknown, dontShowModal?: boolean) {
   const gs = graphSource.value
-  console.log('handleViewDiff', commitId, path)
   if (gs?.type === 'repo') {
-    const req = api.viewDiff(gs.value, commitId, path)
-    console.log('req', req)
+    const req = genReq(gs.value)
+    console.log(action, 'req', req)
+    if (!dontShowModal) {
+      loadingDialog.value?.showModal()
+    }
     vscode.postMessage(req)
   } else {
-    console.warn("Trying to view diff of inline-generated graph")
+    console.warn(action, "Trying to run on inline-generated graph")
   }
 }
 
 provide(GRAPH_ACTIONS_INJECTION_KEY, {
-  viewDiff: handleViewDiff,
+  viewDiff(commitId: string, filePath: string) {
+    postIfJJRepo('viewDiff', (repo) => api.viewDiff(repo, commitId, filePath), true)
+  },
+  newAfter(changeId: string) {
+    postIfJJRepo('newAfter', (repo) => api.newChange(repo, false, undefined, `change_id(${changeId})`, undefined, undefined))
+  },
+  newBefore(changeId: string) {
+    postIfJJRepo('newBefore', (repo) => api.newChange(repo, false, undefined, undefined, `change_id(${changeId})`, undefined))
+  },
+  newFrom(changeId: string) {
+    postIfJJRepo('newFrom', (repo) => api.newChange(repo, true, `change_id(${changeId})`, undefined, undefined, undefined))
+  },
+  edit(changeId: string) {
+    postIfJJRepo('edit', (repo) => api.edit(repo, changeId, false))
+  },
+  async describe(changeId: string, existingDesc: string) {
+    const newDesc = await getDescribeInput(existingDesc)
+    if (newDesc === existingDesc) {
+      return
+    }
+    postIfJJRepo('describe', (repo) => api.describe(repo, changeId, newDesc))
+  },
+  abandon(changeId: string) {
+    postIfJJRepo('abandon', (repo) => api.abandon(repo, changeId, true, false))
+  },
 })
+
+let dialogCloseCb: ((dismissed: boolean) => void) | undefined
+
+async function getDescribeInput(existingDesc: string) {
+  return new Promise<string>((resolve, reject) => {
+    dialogCloseCb = (dismissed) => {
+      if (dismissed) {
+        describeInput.value = existingDesc
+      }
+      resolve(describeInput.value)
+      dialogCloseCb = undefined
+    }
+    describeInput.value = existingDesc
+    console.log('existingDesc', existingDesc)
+    describeInputDialog.value?.showModal()
+  })
+}
 
 </script>
 
 <template>
   <dialog class="modal-dialog" ref="loadingDialog">
     <div>Loading</div>
+  </dialog>
+  <dialog class="modal-dialog" ref="describeInputDialog" @cancel="dialogCloseCb?.(true)" @close="dialogCloseCb?.(false)">
+    <form>
+      <textarea placeholder="Description" v-model="describeInput" cols="80" rows="5"></textarea>
+      <div>
+        <button formmethod="dialog">Submit</button>
+      </div>
+    </form>
   </dialog>
   <DevTestOptions />
   <Graph :key="graphId" :commits="logNodes" :opts="opts" />

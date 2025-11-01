@@ -10,6 +10,7 @@ import NodeDescription from '../NodeDescription.vue';
 import { inject } from 'vue';
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 import IdPrefix from '../IdPrefix.vue';
+import { LogIn, Pencil, ArrowUpFromDot, ArrowDownToDot, Trash2, Plus } from "lucide-vue-next";
 
 const actions = inject(GRAPH_ACTIONS_INJECTION_KEY)!
 
@@ -37,14 +38,15 @@ const emit = defineEmits<ThisComponentEmits>()
   <div class="display-contents graph-row" :class="{ 'selected': selected }" @mouseenter="emit('mouseenter')" @mouseleave="emit('mouseleave')" @click="emit('click')">
     <div class="display-contents" v-if="nodeData.type === 'commit'">
       <div class="px-2 grid-cell"></div>
-      <div class="px-2 grid-cell">
+      <div class="px-2 grid-cell command-bar">
         <template v-if="highlighted || selected">
           <!-- <span class="command" :class="{ 'disabled': nodeData.isImmutable }">D</span> -->
-          <button @click.stop="actions.edit(nodeData.changeId)"      class="command" :disabled="nodeData.isWorkingCopy || nodeData.isImmutable">E</button>
-          <button @click.stop="actions.describe(nodeData.changeId, nodeData.description)"   class="command" :disabled="nodeData.isImmutable"         >D</button>
-          <button @click.stop="actions.newAfter(nodeData.changeId)"  class="command"                                                           >A</button>
-          <button @click.stop="actions.newBefore(nodeData.changeId)" class="command" :disabled="nodeData.isImmutable"                          >B</button>
-          <button @click.stop="actions.abandon(nodeData.changeId)"   class="command" :disabled="nodeData.isImmutable || !nodeData.isEmpty || nodeData.parents.length > 1">X</button>
+          <button class="command" title="Edit"          @click.stop="actions.edit(nodeData.changeId)"                           :disabled="nodeData.isWorkingCopy || nodeData.isImmutable"                          ><LogIn :size="20" /></button>
+          <button class="command" title="Describe"      @click.stop="actions.describe(nodeData.changeId, nodeData.description)" :disabled="nodeData.isImmutable"                                                    ><Pencil :size="20" /></button>
+          <button class="command" title="New"           @click.stop="actions.newFrom(nodeData.changeId)"                                                                                                            ><Plus :size="20" stroke-width="3" /></button>
+          <button class="command" title="Insert After"  @click.stop="actions.newAfter(nodeData.changeId)"                                                                                                           ><ArrowUpFromDot :size="20" /></button>
+          <button class="command" title="Insert Before" @click.stop="actions.newBefore(nodeData.changeId)"                      :disabled="nodeData.isImmutable"                                                    ><ArrowDownToDot :size="20" /></button>
+          <button class="command" title="Abandon"       @click.stop="actions.abandon(nodeData.changeId)"                        :disabled="nodeData.isImmutable || !nodeData.isEmpty || nodeData.parents.length > 1"><Trash2 :size="20" /></button>
         </template>
       </div>
       <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" /></div>
@@ -118,15 +120,37 @@ const emit = defineEmits<ThisComponentEmits>()
 }
 
 .command {
-  padding-inline: 6px;
+  display: block;
+
+  padding-inline: 0;
+  padding-block: 2px;
+  margin: 0;
+  outline: none;
+  border: none;
+
+  cursor: pointer;
 }
 
-.command:not(.disabled):hover {
+.command {
+  background-color: transparent;
+  color: currentColor;
+}
+
+.command:not([disabled]):hover {
   background-color: rgba(128, 128, 128, 0.5);
 }
 
-.command.disabled {
+.command[disabled] {
   cursor: not-allowed;
-  color: rgb(from currentColor r g b / calc(alpha * 0.6));
+  color: rgb(from currentColor calc(r * 0.6) calc(g * 0.6) calc(b * 0.6) );
+}
+
+.command-bar {
+  display: flex;
+  gap: 6px;
+}
+
+.pointer-events-none {
+  pointer-events: none;
 }
 </style>

@@ -10,6 +10,7 @@ import CommitDetailsDiff from './diff';
 import { provide } from 'vue';
 import { COMMIT_ID_INJECTION_KEY } from '@common-client/providers/commit-id-provider';
 import IdPrefix from '../IdPrefix.vue';
+import { Pin, X } from 'lucide-vue-next';
 
 type ThisComponentProps = {
   nodeData?: JJCommitGraphNodeData
@@ -33,10 +34,10 @@ const emit = defineEmits<ThisComponentEmits>()
 <template>
   <div class="commit-details">
     <div class="controls">
-      <span v-if="!pinned" @click="emit('pin')" class="control">P</span>
+      <span v-if="!pinned" @click="emit('pin')" class="control"><Pin :size="16" /></span>
       <!-- The click.stop is required here to stop the click event propagation.
            Otherwise it will be treated as though the user selected the commit again after closing it -->
-      <span @click.stop="emit('close')" class="control">X</span>
+      <span @click.stop="emit('close')" class="control"><X :size="16" /></span>
     </div>
     <template v-if="nodeData && nodeData.type === 'commit'">
       <div class="meta-and-diff-pane user-select-text">
@@ -88,6 +89,10 @@ const emit = defineEmits<ThisComponentEmits>()
 .control {
   cursor: pointer;
   user-select: none;
+}
+
+.control:hover {
+  background-color: rgba(128, 128, 128, 0.5);
 }
 
 .meta-and-diff-pane {

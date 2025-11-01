@@ -4,6 +4,7 @@
   "license": "LGPL-3.0-only",
   "dependencies": {
     "@vueuse/core": "catalog:vue",
+    "lucide-vue-next": "catalog:vue",
     "pinia": "catalog:vue",
     "vue": "catalog:vue"
   },

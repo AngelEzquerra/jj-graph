@@ -7,13 +7,15 @@ SPDX-License-Identifier: Apache-2.0
 <script setup lang="ts">
 
 import * as api from '@common/api'
-import { effect, provide, ref, useTemplateRef } from 'vue';
+import { computed, effect, provide, ref, useTemplateRef } from 'vue';
 import Graph from '@common-client/components/Graph.vue';
 import DevTestOptions from '@common-client/components/DevTestOptions.vue';
 import { useDevTestOptionsStore } from '@common-client/stores/devTestOptions';
 import { useRepoSourceStore, generateInlineGraph } from '@common-client/stores/repoSource';
 import { storeToRefs } from 'pinia';
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
+import { refDebounced } from '@vueuse/core';
+import { LoaderCircle } from 'lucide-vue-next';
 
 type NodeId = number
 type GraphNode<NodeData> = {
@@ -35,6 +37,11 @@ const { updateRepoList } = repoSourceStore
 const loadingDialog = useTemplateRef('loadingDialog')
 const describeInputDialog = useTemplateRef('describeInputDialog')
 const describeInput = ref<string>('')
+
+const revsetInput = ref<string>()
+const revsetInputDebounced = refDebounced(revsetInput, 1500)
+
+const revsetInputLoading = computed(() => revsetInput.value !== revsetInputDebounced.value)
 
 window.addEventListener('message', event => {
   console.log('Message Handled', event)
@@ -68,11 +75,12 @@ vscode.postMessage(api.listRepos())
 function refreshLog() {
   const gs = graphSource.value
   const kgs = knownGraphSources.value
+  const revset = revsetInputDebounced.value
   console.log('doing effect with gs', gs)
   if (gs) {
     if (gs.type === 'repo' && kgs.repo.some(x => x.value === gs.value)) {
       loadingDialog.value?.showModal()
-      vscode.postMessage(api.log(gs.value, undefined))
+      vscode.postMessage(api.log(gs.value, revset))
     } else {
       logNodes.value = generateInlineGraph(gs.value).nodes
     }
@@ -155,6 +163,11 @@ async function getDescribeInput(existingDesc: string) {
     </form>
   </dialog>
   <DevTestOptions />
+  <div>
+    <label>Revset</label>
+    <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
+    <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" />
+  </div>
   <Graph :key="graphId" :commits="logNodes" :opts="opts" />
 </template>
 
@@ -167,6 +180,31 @@ async function getDescribeInput(existingDesc: string) {
 
 .modal-dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.5);
+}
+
+.revset-input {
+  width: fit-content;
+}
+
+</style>
+
+<style>
+
+.hidden {
+  visibility: hidden;
+}
+
+.spin {
+  animation: anim-spin 1s linear infinite;
+}
+
+@keyframes anim-spin {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(360deg);
+  }
 }
 
 </style>

@@ -6,7 +6,8 @@ import { type BaseRequestRepoParameters } from "./base"
 
 export interface RequestParameters extends BaseRequestRepoParameters {
   commitId: string
-  path: string
+  leftPath: string
+  rightPath: string
 }
 
 export interface Response {

@@ -104,8 +104,8 @@ function postIfJJRepo(action: string, genReq: (repoPath: string) => unknown, don
 }
 
 provide(GRAPH_ACTIONS_INJECTION_KEY, {
-  viewDiff(commitId: string, filePath: string) {
-    postIfJJRepo('viewDiff', (repo) => api.viewDiff(repo, commitId, filePath), true)
+  viewDiff(commitId: string, leftPath: string, rightPath: string) {
+    postIfJJRepo('viewDiff', (repo) => api.viewDiff(repo, commitId, leftPath, rightPath), true)
   },
   newAfter(changeId: string) {
     postIfJJRepo('newAfter', (repo) => api.newChange(repo, false, undefined, `change_id(${changeId})`, undefined, undefined))

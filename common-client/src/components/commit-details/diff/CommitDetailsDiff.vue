@@ -8,23 +8,27 @@ SPDX-License-Identifier: LGPL-3.0-only
 import { computed } from 'vue';
 import CommitDetailsTreeItem from './CommitDetailsTreeItem.vue';
 import CommitDetailsListItem from './CommitDetailsListItem.vue';
-import { parseDiffSummary, parseDiffTree } from '@common/jj-graph-parser/diff-summary-parser';
+import { parseDiffSummaryRaw, parseDiffSummaryFiles, parseDiffTree } from '@common/jj-graph-parser/diff-summary-parser';
+import type { JJDiffSummaryFile } from '@common/models/diff';
 
 type ThisComponentProps = {
-  diffSummaryRaw: string[]
+  diffSummaryFiles: JJDiffSummaryFile[]
   mode: 'list' | 'tree'
 }
 
-const { diffSummaryRaw, mode } = defineProps<ThisComponentProps>()
+const { diffSummaryFiles, mode } = defineProps<ThisComponentProps>()
 
-const diffSummary = computed(() => parseDiffSummary(diffSummaryRaw))
+// const diffSummary = computed(() => parseDiffSummaryRaw(diffSummaryRaw))
+// const diffTree = computed(() => parseDiffTree(diffSummary.value))
+
+const diffSummary = computed(() => parseDiffSummaryFiles(diffSummaryFiles))
 const diffTree = computed(() => parseDiffTree(diffSummary.value))
 
 </script>
 
 <template>
   <template v-if="mode === 'list'">
-    <CommitDetailsListItem v-for="item in diffSummary" :item="item"></CommitDetailsListItem>
+    <CommitDetailsListItem v-for="item in diffSummary" :item="item" ></CommitDetailsListItem>
   </template>
   <template v-else-if="mode === 'tree'">
     <CommitDetailsTreeItem :tree="diffTree" />

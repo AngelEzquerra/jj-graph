@@ -4,5 +4,5 @@
 
 export interface IntegrationProvider {
   listRepos(): string[]
-  viewDiff(repoPath: string, commitId: string, filePath: string): void
+  viewDiff(repoPath: string, commitId: string, leftPath: string, rightPath: string): void
 }

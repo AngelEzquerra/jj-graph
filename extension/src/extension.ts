@@ -15,6 +15,10 @@ type PlatformSpecificMap<T> = {
   };
 }
 
+function diffTitle(leftPath: string, rightPath: string) {
+  return rightPath
+}
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "vscode-jj-graph" activated');
 
@@ -28,12 +32,12 @@ export function activate(context: vscode.ExtensionContext) {
           .map(x => x.fsPath)
       )
     },
-    async viewDiff(repoPath, commitId, filePath) {
+    async viewDiff(repoPath, commitId, leftPath, rightPath) {
       await vscode.commands.executeCommand(
         'vscode.diff',
-        jjUri.fromDiffData({ type: 'diff', repoPath, commitId, filePath, side: 'left' }),
-        jjUri.fromDiffData({ type: 'diff', repoPath, commitId, filePath, side: 'right' }),
-        path.basename(filePath),
+        jjUri.fromDiffData({ type: 'diff', repoPath, commitId, filePath: leftPath, side: 'left' }),
+        jjUri.fromDiffData({ type: 'diff', repoPath, commitId, filePath: rightPath, side: 'right' }),
+        diffTitle(leftPath, rightPath),
         { preview: true }
       )
     },

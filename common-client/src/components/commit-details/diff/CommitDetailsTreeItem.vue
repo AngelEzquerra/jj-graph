@@ -29,7 +29,7 @@ function toggleExpanded() {
 
 <template>
   <template v-if="tree.type === 'leaf'">
-    <div class="file" :class="[ `status-${tree.item.status}` ]"><span @click="actions.viewDiff(commitId, tree.item.path)">{{ tree.path }}</span></div>
+    <div class="file" :class="[ `status-${tree.item.status}` ]"><span @click="actions.viewDiff(commitId, tree.item.source.path, tree.item.target.path)">{{ tree.path }}</span></div>
   </template>
   <template v-else-if="tree.type === 'tree'">
     <template v-if="!tree.path">

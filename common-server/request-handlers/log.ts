@@ -55,7 +55,18 @@ const templateStructure = tEnd(tObject([
   tObjectField('author', 'self.author()'),
   tObjectField('committer', 'self.committer()'),
   tObjectFieldRaw('parents', tArrayMap('self.parents()', 'c', 'json(c.commit_id())')),
-  tObjectFieldRaw('diffSummaryRaw', tArrayMap('stringify(self.diff().summary()).lines()', 'l', 'json(l)')),
+  // tObjectFieldRaw('diffSummaryRaw', tArrayMap('stringify(self.diff().summary()).lines()', 'l', 'json(l)')),
+  tObjectFieldRaw('diffSummaryFiles', tArrayMap('self.diff().files()', 'f', tObject([
+    tObjectField('status', 'f.status()'),
+    tObjectFieldRaw('source', tObject([
+      tObjectFieldOpt('conflict', 'f.source().conflict()'),
+      tObjectField('path', 'f.source().path()'),
+    ])),
+    tObjectFieldRaw('target', tObject([
+      tObjectFieldOpt('conflict', 'f.target().conflict()'),
+      tObjectField('path', 'f.target().path()'),
+    ])),
+  ]))),
   // tObjectFieldRaw('bookmarks', tArrayMap('self.bookmarks()', 'b', `"\\"" ++ b ++ "\\""`)),
   tObjectFieldRaw('bookmarksLocal', tArrayMap('self.local_bookmarks()', 'lb', `json(lb)`)),
   tObjectFieldRaw('bookmarksRemote', tArrayMap('self.remote_bookmarks()', 'rb', `json(rb)`)),

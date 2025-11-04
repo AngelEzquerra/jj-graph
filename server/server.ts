@@ -18,8 +18,8 @@ const ip: IntegrationProvider = {
       process.env.JJ_REPO_PATH!,
     ]
   },
-  viewDiff(repoPath: string, commitId: string, filePath: string): void {
-    console.log('viewDiff', { repoPath, commitId, filePath })
+  viewDiff(repoPath: string, commitId: string, leftPath: string, rightPath: string): void {
+    console.log('viewDiff', { repoPath, commitId, leftPath, rightPath })
   }
 }
 

@@ -6,6 +6,6 @@ import * as api from '@common/api/viewDiff'
 import { type IntegrationProvider } from '@/integration'
 
 export async function handleRequest(request: api.RequestParameters, ip: IntegrationProvider): Promise<api.Response> {
-  ip.viewDiff(request.repoDir, request.commitId, request.path)
+  ip.viewDiff(request.repoDir, request.commitId, request.leftPath, request.rightPath)
   return {}
 }

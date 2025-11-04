@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-only
 
-import { type JJGraphParseOutput, type JJGraphNode } from './graph-parser'
+import { type JJDiffSummaryRaw, type JJDiffSummaryFile } from '../models/diff'
+import { type JJGraphParseOutput } from './graph-parser'
 
 type NodeId = number
 
@@ -43,7 +44,8 @@ export type JJCommitGraphCommitNode = {
   author: JJSignature
   committer: JJSignature
   parents: string[]
-  diffSummaryRaw: string[]
+  // diffSummaryRaw: DiffSummaryRaw
+  diffSummaryFiles: JJDiffSummaryFile[]
   bookmarksLocal: JJBookmark[]
   bookmarksRemote: JJBookmark[]
   tags: JJBookmark[]

@@ -68,8 +68,8 @@ export function log(repoDir: string, revset?: string): JJApiRequestLog {
   return { type: REQUEST_LOG, repoDir, revset }
 }
 
-export function viewDiff(repoDir: string, commitId: string, path: string): JJApiRequestViewDiff {
-  return { type: REQUEST_VIEW_DIFF, repoDir, commitId, path }
+export function viewDiff(repoDir: string, commitId: string, leftPath: string, rightPath: string): JJApiRequestViewDiff {
+  return { type: REQUEST_VIEW_DIFF, repoDir, commitId, leftPath, rightPath }
 }
 
 export function newChange(repoDir: string, edit: boolean, revset?: string, afterRevset?: string, beforeRevset?: string, message?: string): JJApiRequestNewChange {

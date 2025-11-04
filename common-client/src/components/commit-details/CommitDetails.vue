@@ -62,7 +62,7 @@ const emit = defineEmits<ThisComponentEmits>()
           <div class="commit-meta-desc">{{ nodeData.description }}</div>
         </div>
         <div class="commit-diff">
-          <CommitDetailsDiff :diff-summary-raw="nodeData.diffSummaryRaw" mode="tree" />
+          <CommitDetailsDiff :diff-summary-files="nodeData.diffSummaryFiles" mode="tree" />
         </div>
       </div>
     </template>

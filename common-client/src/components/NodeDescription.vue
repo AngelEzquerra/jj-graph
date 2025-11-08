@@ -5,9 +5,10 @@ SPDX-License-Identifier: LGPL-3.0-only
 -->
 
 <script setup lang="ts">
+import { GRAPH_INTERACTION_CTX_IK } from '@common-client/providers/graph-interaction-ctx-provider';
 import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
 import { Bookmark, Tag } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 type ThisComponentProps = {
   nodeData?: JJCommitGraphNodeData
@@ -61,6 +62,8 @@ const descriptionText = computed(() => {
   }
 })
 
+const interactionCtx = inject(GRAPH_INTERACTION_CTX_IK)!
+
 </script>
 
 <template>
@@ -69,7 +72,7 @@ const descriptionText = computed(() => {
       <span v-if="nodeData.isWorkingCopy" class="chip chip-content">@</span>
       <span v-if="nodeData.isEmpty" class="chip chip-content">empty</span>
       <template v-if="bookmarks?.length > 0">
-        <span v-for="b in bookmarks" class="bookmark">
+        <span v-for="b in bookmarks" class="bookmark" @contextmenu="interactionCtx.setBookmarkContext(b.name)">
           <span class="pill" :style="{ backgroundColor: color }"><Bookmark :size="16" /></span>
           <span class="bookmark-name">{{ b.name }}</span>
           <span class="bookmark-local faded" v-if="b.local">jj</span>

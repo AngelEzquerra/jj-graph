@@ -8,6 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 import * as api from '@common/api'
 import { computed, effect, provide, ref, useTemplateRef } from 'vue';
+import GraphContextMenu from '@common-client/components/GraphContextMenu.vue';
 import Graph from '@common-client/components/Graph.vue';
 import DevTestOptions from '@common-client/components/DevTestOptions.vue';
 import { useDevTestOptionsStore } from '@common-client/stores/devTestOptions';
@@ -62,7 +63,13 @@ window.addEventListener('message', event => {
     case api.REQUEST_EDIT:
     case api.REQUEST_ABANDON:
     case api.REQUEST_NEW_CHANGE:
-    case api.REQUEST_DESCRIBE: {
+    case api.REQUEST_DESCRIBE:
+    case api.REQUEST_BOOKMARK_CREATE:
+    case api.REQUEST_BOOKMARK_DELETE:
+    case api.REQUEST_BOOKMARK_FORGET:
+    case api.REQUEST_BOOKMARK_RENAME:
+    case api.REQUEST_BOOKMARK_SET:
+    {
       refreshLog()
       break;
     }
@@ -129,6 +136,31 @@ provide(GRAPH_ACTIONS_INJECTION_KEY, {
   abandon(changeId: string) {
     postIfJJRepo('abandon', (repo) => api.abandon(repo, changeId, true, false))
   },
+
+  async bookmarkCreate(changeId: string) {
+    const name = await getDescribeInput('')
+    if (!name) {
+      return
+    }
+    postIfJJRepo('bookmarkCreate', (repo) => api.bookmarkCreate(repo, changeId, name))
+  },
+  bookmarkDelete(name: string) {
+    postIfJJRepo('bookmarkDelete', (repo) => api.bookmarkDelete(repo, name))
+  },
+  bookmarkForget(name: string, includeRemotes: boolean) {
+    postIfJJRepo('bookmarkForget', (repo) => api.bookmarkForget(repo, name, includeRemotes))
+  },
+  async bookmarkRename(oldName: string) {
+    const newName = await getDescribeInput(oldName)
+    if (newName === oldName || !newName) {
+      return
+    }
+    postIfJJRepo('bookmarkRename', (repo) => api.bookmarkRename(repo, oldName, newName))
+  },
+  async bookmarkSet(name: string) {
+    console.warn("Selecting commits is still not implemented")
+    // postIfJJRepo('bookmarkSet', (repo) => api.bookmarkSet(repo, name, changeId))
+  }
 })
 
 let dialogCloseCb: ((dismissed: boolean) => void) | undefined
@@ -169,7 +201,9 @@ async function getDescribeInput(existingDesc: string) {
       <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
       <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" />
     </div>
-    <Graph :key="graphId" :commits="logNodes" :opts="opts" />
+    <GraphContextMenu>
+      <Graph :key="graphId" :commits="logNodes" :opts="opts" />
+    </GraphContextMenu>
   </UApp>
 </template>
 

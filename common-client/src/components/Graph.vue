@@ -6,7 +6,7 @@ SPDX-License-Identifier: LGPL-3.0-only
 
 <script lang="ts" setup>
 import NodeDescription from './NodeDescription.vue'
-import { computed, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { renderLogic } from '@common/jj-graph-renderer'
 import { unit } from '@common/jj-graph-renderer/svg-renderer'
 import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
@@ -14,6 +14,7 @@ import GraphLayer from './GraphLayer.vue'
 import CommitDetails from './commit-details/CommitDetails.vue'
 import { type NodeColumnGenOptions } from '@common/jj-graph-renderer/layout'
 import CommitOverview from './commit-overview/CommitOverview.vue'
+import { GRAPH_INTERACTION_CTX_IK } from '@common-client/providers/graph-interaction-ctx-provider'
 
 type NodeId = number
 type EdgeId = number
@@ -208,6 +209,63 @@ function commitDetailsPolygon(y: number) {
   return `${xO},${yO} ${xL},${yT} ${xR},${yT} ${xR},${yB} ${xL},${yB}`
 }
 
+function commitIdFromNodeData(data?: JJCommitGraphNodeData) {
+  switch (data?.type) {
+    case 'commit':
+    case 'commitId':
+      return data.commitId
+    default:
+      return undefined
+  }
+}
+
+const interactionCtx = inject(GRAPH_INTERACTION_CTX_IK)!
+
+const highlightedCommit = computed(() => {
+  const hNodeId = highlightedNodeId.value
+  if (hNodeId === undefined) {
+    return undefined
+  }
+
+  const hNode = commits[hNodeId]!
+  return hNode
+})
+
+const highlightedBeforeAfterId = computed(() => {
+  const hEdgeId = highlightedEdgeId.value
+  const eToDraw = edgesToDraw.value
+
+  if (hEdgeId === undefined) {
+    return undefined
+  }
+
+  const hEdge = eToDraw[hEdgeId]
+  if (hEdge === undefined) {
+    return undefined
+  }
+
+  const fromNode = commits[hEdge.from]
+  const toNode = commits[hEdge.to]
+
+  const fromCommitId = commitIdFromNodeData(fromNode?.data)
+  const toCommitId = commitIdFromNodeData(toNode?.data)
+
+  if (fromCommitId === undefined || toCommitId === undefined) {
+    return undefined
+  }
+
+  return { before: fromCommitId, after: toCommitId }
+})
+
+function setContextMenu() {
+  const hCommit = highlightedCommit.value
+  interactionCtx.setCommitIdContext(commitIdFromNodeData(hCommit?.data))
+  interactionCtx.setBeforeAfterContext(highlightedBeforeAfterId.value)
+  if (hCommit?.data?.type === 'commit') {
+    interactionCtx.setCommitDataContext(hCommit.data)
+  }
+}
+
 </script>
 
 <template>
@@ -220,7 +278,7 @@ function commitDetailsPolygon(y: number) {
       <div class="px-2 grid-header">Author</div>
       <div class="px-2 grid-header">Change</div>
       <div class="px-2 grid-header">Commit</div>
-      <div class="graph-grid-container">
+      <div class="graph-grid-container" @contextmenu="setContextMenu()">
         <div class="display-contents">
           <CommitOverview
             v-for="(node, r) in commits"

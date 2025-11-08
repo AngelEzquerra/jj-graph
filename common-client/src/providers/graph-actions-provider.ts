@@ -12,6 +12,12 @@ export type GraphActionsProvider = {
   edit: (changeId: string) => void
   describe: (changeId: string, existingMessage: string) => void
   abandon: (changeId: string) => void
+
+  bookmarkCreate: (changeId: string) => void
+  bookmarkDelete: (name: string) => void
+  bookmarkForget: (name: string, includeRemotes: boolean) => void
+  bookmarkRename: (oldName: string) => void
+  bookmarkSet: (name: string) => void
 }
 
 export const GRAPH_ACTIONS_INJECTION_KEY = Symbol() as InjectionKey<GraphActionsProvider>

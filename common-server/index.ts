@@ -10,6 +10,7 @@ import * as _newChange from './request-handlers/newChange'
 import * as _edit from './request-handlers/edit'
 import * as _describe from './request-handlers/describe'
 import * as _abandon from './request-handlers/abandon'
+import * as _bookmark from './request-handlers/bookmark'
 import { type IntegrationProvider } from './integration'
 
 export async function handleRequest(request: api.JJApiRequest, ip: IntegrationProvider): Promise<api.JJApiResponse> {
@@ -42,6 +43,26 @@ export async function handleRequest(request: api.JJApiRequest, ip: IntegrationPr
     case api.REQUEST_ABANDON: {
       const response = await _abandon.handleRequest(request, ip)
       return { type: api.REQUEST_ABANDON, request, response }
+    }
+    case api.REQUEST_BOOKMARK_CREATE: {
+      const response = await _bookmark.create.handleRequest(request, ip)
+      return { type: api.REQUEST_BOOKMARK_CREATE, request, response }
+    }
+    case api.REQUEST_BOOKMARK_DELETE: {
+      const response = await _bookmark.delete.handleRequest(request, ip)
+      return { type: api.REQUEST_BOOKMARK_DELETE, request, response }
+    }
+    case api.REQUEST_BOOKMARK_FORGET: {
+      const response = await _bookmark.forget.handleRequest(request, ip)
+      return { type: api.REQUEST_BOOKMARK_FORGET, request, response }
+    }
+    case api.REQUEST_BOOKMARK_RENAME: {
+      const response = await _bookmark.rename.handleRequest(request, ip)
+      return { type: api.REQUEST_BOOKMARK_RENAME, request, response }
+    }
+    case api.REQUEST_BOOKMARK_SET: {
+      const response = await _bookmark.set.handleRequest(request, ip)
+      return { type: api.REQUEST_BOOKMARK_SET, request, response }
     }
     default: {
       return { type: 'unknown' }

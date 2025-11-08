@@ -151,24 +151,26 @@ async function getDescribeInput(existingDesc: string) {
 </script>
 
 <template>
-  <dialog class="modal-dialog" ref="loadingDialog">
-    <div>Loading</div>
-  </dialog>
-  <dialog class="modal-dialog" ref="describeInputDialog" @cancel="dialogCloseCb?.(true)" @close="dialogCloseCb?.(false)">
-    <form>
-      <textarea placeholder="Description" v-model="describeInput" cols="80" rows="5"></textarea>
-      <div>
-        <button formmethod="dialog">Submit</button>
-      </div>
-    </form>
-  </dialog>
-  <DevTestOptions />
-  <div>
-    <label>Revset</label>
-    <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
-    <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" />
-  </div>
-  <Graph :key="graphId" :commits="logNodes" :opts="opts" />
+  <UApp>
+    <dialog class="modal-dialog" ref="loadingDialog">
+      <div>Loading</div>
+    </dialog>
+    <dialog class="modal-dialog" ref="describeInputDialog" @cancel="dialogCloseCb?.(true)" @close="dialogCloseCb?.(false)">
+      <form>
+        <textarea placeholder="Description" v-model="describeInput" cols="80" rows="5"></textarea>
+        <div>
+          <button formmethod="dialog">Submit</button>
+        </div>
+      </form>
+    </dialog>
+    <DevTestOptions />
+    <div>
+      <label>Revset</label>
+      <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
+      <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" />
+    </div>
+    <Graph :key="graphId" :commits="logNodes" :opts="opts" />
+  </UApp>
 </template>
 
 <style scoped>

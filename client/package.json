@@ -12,10 +12,12 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@nuxt/ui": "catalog:vue",
     "@vueuse/core": "catalog:vue",
     "lucide-vue-next": "catalog:vue",
     "pinia": "catalog:vue",
-    "vue": "catalog:vue"
+    "vue": "catalog:vue",
+    "vue-router": "catalog:vue"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:bun",

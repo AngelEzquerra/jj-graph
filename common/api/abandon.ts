@@ -5,7 +5,7 @@
 import { type BaseRequestRepoParameters } from "./base"
 
 export interface RequestParameters extends BaseRequestRepoParameters {
-  changeId: string
+  revset: string
   retainBookmarks?: boolean
   restoreDescendants?: boolean
 }

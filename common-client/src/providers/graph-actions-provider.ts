@@ -11,7 +11,7 @@ export type GraphActionsProvider = {
   newFrom: (changeId: string) => void
   edit: (changeId: string) => void
   describe: (changeId: string, existingMessage: string) => void
-  abandon: (changeId: string) => void
+  abandon: (changeIds: string[]) => void
 
   bookmarkCreate: (changeId: string) => void
   bookmarkDelete: (name: string) => void

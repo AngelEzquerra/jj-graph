@@ -9,7 +9,7 @@ import { invokeJJ } from '@/jj'
 function args(request: api.RequestParameters) {
   const args = [
     `abandon`,
-    `change_id(${request.changeId})`,
+    request.revset,
   ]
   if (request.retainBookmarks) {
     args.push(`--retain-bookmarks`)

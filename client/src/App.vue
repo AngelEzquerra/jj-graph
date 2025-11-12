@@ -135,8 +135,8 @@ provide(GRAPH_ACTIONS_INJECTION_KEY, {
     }
     postIfJJRepo('describe', (repo) => api.describe(repo, changeId, newDesc))
   },
-  abandon(changeId: string) {
-    postIfJJRepo('abandon', (repo) => api.abandon(repo, changeId, true, false))
+  abandon(changeIds: string[]) {
+    postIfJJRepo('abandon', (repo) => api.abandon(repo, changeIds.map(x => `change_id(${x})`).join(' | '), true, false))
   },
 
   async bookmarkCreate(changeId: string) {

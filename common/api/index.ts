@@ -116,8 +116,8 @@ export function describe(repoDir: string, changeId: string, message: string): JJ
   return { type: REQUEST_DESCRIBE, repoDir, changeId, message }
 }
 
-export function abandon(repoDir: string, changeId: string, retainBookmarks?: boolean, restoreDescendants?: boolean): JJApiRequestAbandon {
-  return { type: REQUEST_ABANDON, repoDir, changeId, retainBookmarks, restoreDescendants }
+export function abandon(repoDir: string, revset: string, retainBookmarks?: boolean, restoreDescendants?: boolean): JJApiRequestAbandon {
+  return { type: REQUEST_ABANDON, repoDir, revset, retainBookmarks, restoreDescendants }
 }
 
 export function bookmarkCreate(repoDir: string, changeId: string, name: string): JJApiRequestBookmarkCreate {

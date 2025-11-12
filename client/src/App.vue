@@ -116,14 +116,14 @@ provide(GRAPH_ACTIONS_INJECTION_KEY, {
   viewDiff(commitId: string, leftPath: string, rightPath: string) {
     postIfJJRepo('viewDiff', (repo) => api.viewDiff(repo, commitId, leftPath, rightPath), true)
   },
-  newAfter(changeId: string) {
-    postIfJJRepo('newAfter', (repo) => api.newChange(repo, false, undefined, `change_id(${changeId})`, undefined, undefined))
+  newAfter(changeIds: string[]) {
+    postIfJJRepo('newAfter', (repo) => api.newChange(repo, false, undefined, changeIds.map(x => `change_id(${x})`).join(' | '), undefined, undefined))
   },
-  newBefore(changeId: string) {
-    postIfJJRepo('newBefore', (repo) => api.newChange(repo, false, undefined, undefined, `change_id(${changeId})`, undefined))
+  newBefore(changeIds: string[]) {
+    postIfJJRepo('newBefore', (repo) => api.newChange(repo, false, undefined, undefined, changeIds.map(x => `change_id(${x})`).join(' | '), undefined))
   },
-  newFrom(changeId: string) {
-    postIfJJRepo('newFrom', (repo) => api.newChange(repo, true, `change_id(${changeId})`, undefined, undefined, undefined))
+  newFrom(changeIds: string[]) {
+    postIfJJRepo('newFrom', (repo) => api.newChange(repo, true, changeIds.map(x => `change_id(${x})`).join(' | '), undefined, undefined, undefined))
   },
   edit(changeId: string) {
     postIfJJRepo('edit', (repo) => api.edit(repo, changeId, false))

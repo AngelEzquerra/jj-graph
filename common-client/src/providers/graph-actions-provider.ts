@@ -6,9 +6,9 @@ import type { InjectionKey } from "vue"
 
 export type GraphActionsProvider = {
   viewDiff: (commitId: string, leftPath: string, rightPath: string) => void
-  newAfter: (changeId: string) => void
-  newBefore: (changeId: string) => void
-  newFrom: (changeId: string) => void
+  newAfter: (changeIds: string[]) => void
+  newBefore: (changeIds: string[]) => void
+  newFrom: (changeIds: string[]) => void
   edit: (changeId: string) => void
   describe: (changeId: string, existingMessage: string) => void
   abandon: (changeIds: string[]) => void

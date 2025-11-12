@@ -119,46 +119,68 @@ function removeEdgeHighlight() {
   highlightedEdgeId.value = undefined
 }
 
-const selectedPreviewNodeId = ref<NodeId>()
-const selectedPinnedNodeIds = ref<NodeId[]>([])
+const selectedNodeIds = ref<NodeId[]>([])
+
+const commitDetailsPreviewNodeId = ref<NodeId>()
+const commitDetailsPinnedNodeIds = ref<NodeId[]>([])
 
 function closeCommitDetails(nodeId: NodeId) {
-  const snIds = selectedPinnedNodeIds.value
-  const indexOfNodeId = snIds.indexOf(nodeId)
+  const pinnedNodeIds = commitDetailsPinnedNodeIds.value
+  const indexOfNodeId = pinnedNodeIds.indexOf(nodeId)
   if (indexOfNodeId >= 0) {
-    snIds.splice(indexOfNodeId, 1)
-  } else if (selectedPreviewNodeId.value === nodeId) {
-    selectedPreviewNodeId.value = undefined
+    pinnedNodeIds.splice(indexOfNodeId, 1)
+  } else if (commitDetailsPreviewNodeId.value === nodeId) {
+    commitDetailsPreviewNodeId.value = undefined
   }
 }
 
-function selectNodeAndBringToFront(nodeId: NodeId) {
-  const snIds = selectedPinnedNodeIds.value
+function toggleNodeSelection(nodeId: NodeId, multiple: boolean) {
+  const snIds = selectedNodeIds.value
   const indexOfNodeId = snIds.indexOf(nodeId)
   if (indexOfNodeId >= 0) {
+    if (multiple) {
+      snIds.splice(indexOfNodeId, 1)
+    }
+  } else {
+    if (multiple) {
+      snIds.push(nodeId)
+    } else {
+      snIds.splice(0, Infinity, nodeId)
+    }
+  }
+}
+
+function openCommitDetailsOrBringToFront(nodeId: NodeId) {
+  const pinnedNodeIds = commitDetailsPinnedNodeIds.value
+  const indexOfNodeId = pinnedNodeIds.indexOf(nodeId)
+  if (indexOfNodeId >= 0) {
     // A pinned node. Bring it to the front
-    snIds.splice(indexOfNodeId, 1)
-    snIds.push(nodeId)
-    selectedPreviewNodeId.value = undefined
+    pinnedNodeIds.splice(indexOfNodeId, 1)
+    pinnedNodeIds.push(nodeId)
+    commitDetailsPreviewNodeId.value = undefined
   } else {
     // Just preview it
-    selectedPreviewNodeId.value = nodeId
+    commitDetailsPreviewNodeId.value = nodeId
   }
+}
+
+function closeCommitDetailsPreview() {
+  commitDetailsPreviewNodeId.value = undefined
 }
 
 function pinCommitDetails(nodeId: NodeId) {
-  const snIds = selectedPinnedNodeIds.value
-  const indexOfNodeId = snIds.indexOf(nodeId)
+  const pinnedNodeIds = commitDetailsPinnedNodeIds.value
+  const indexOfNodeId = pinnedNodeIds.indexOf(nodeId)
   if (indexOfNodeId >= 0) {
-    snIds.splice(indexOfNodeId, 1)
+    pinnedNodeIds.splice(indexOfNodeId, 1)
   }
-  snIds.push(nodeId)
-  selectedPreviewNodeId.value = undefined
+  pinnedNodeIds.push(nodeId)
+  commitDetailsPreviewNodeId.value = undefined
 }
 
 const selectedNodesToDraw = computedL('selectedNodesToDraw', () => {
-  const snPinnedIds = selectedPinnedNodeIds.value
-  const snPreviewId = selectedPreviewNodeId.value
+  const snPinnedIds = commitDetailsPinnedNodeIds.value
+  const snPreviewId = commitDetailsPreviewNodeId.value
   const ntd = nodesToDraw.value
   const snToDraw = snPinnedIds.map(id => ({
     id: id,
@@ -282,15 +304,19 @@ function setContextMenu() {
         <div class="display-contents">
           <CommitOverview
             v-for="(node, r) in commits"
-            v-memo="[ commits, nodesToDraw, highlightedNodeId === r, selectedPreviewNodeId === r || selectedPinnedNodeIds.includes(r) ]"
+            v-memo="[ commits, nodesToDraw, highlightedNodeId === r, selectedNodeIds.includes(r) ]"
             :key="r"
             :node-data="node.data!"
             :color="colorMap[nodesToDraw[r]!.c % colorMap.length]!"
             :highlighted="highlightedNodeId === r"
-            :selected="selectedPreviewNodeId === r || selectedPinnedNodeIds.includes(r)"
+            :selected="selectedNodeIds.includes(r)"
             @mouseenter="highlightNode(node.id)"
             @mouseleave="removeNodeHighlight"
-            @click="selectNodeAndBringToFront(node.id)"
+            @select:single="toggleNodeSelection(node.id, false)"
+            @select:multiple="toggleNodeSelection(node.id, true)"
+            @commit:pin="pinCommitDetails(node.id)"
+            @commit:preview="openCommitDetailsOrBringToFront(node.id)"
+            @commit:closepreview="closeCommitDetailsPreview()"
           />
         </div>
         <div class="graph-container pointer-events-none">
@@ -310,7 +336,7 @@ function setContextMenu() {
           </svg>
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length" :width="commitDetailsWidth">
-          <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow pointer-events-all" @click="selectNodeAndBringToFront(sn.id)">
+          <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow pointer-events-all" @click="openCommitDetailsOrBringToFront(sn.id)">
             <polygon :points="commitDetailsPolygon(sn.y)" stroke-width="2" fill="black" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
             <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
               <div xmlns="http://www.w3.org/1999/xhtml" style="height: inherit;">

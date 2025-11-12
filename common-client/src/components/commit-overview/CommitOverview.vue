@@ -28,7 +28,11 @@ type ThisComponentProps = {
 type ThisComponentEmits = {
   (e: 'mouseenter'): void
   (e: 'mouseleave'): void
-  (e: 'click'): void
+  (e: 'select:single'): void
+  (e: 'select:multiple'): void
+  (e: 'commit:closepreview'): void
+  (e: 'commit:preview'): void
+  (e: 'commit:pin'): void
 }
 
 const { nodeData, color, selected, highlighted } = defineProps<ThisComponentProps>()
@@ -37,8 +41,8 @@ const emit = defineEmits<ThisComponentEmits>()
 </script>
 
 <template>
-  <div class="display-contents graph-row" :class="{ 'selected': selected }" @mouseenter="emit('mouseenter')" @mouseleave="emit('mouseleave')" @click="emit('click')">
-    <div class="display-contents" v-if="nodeData.type === 'commit'">
+  <div class="display-contents graph-row" :class="{ 'selected': selected }" @mouseenter="emit('mouseenter')" @mouseleave="emit('mouseleave')" @click.exact="emit('select:single')" @click.ctrl.exact="emit('select:multiple')" @click.meta.exact="emit('select:multiple')">
+    <div class="display-contents" v-if="nodeData.type === 'commit'" @click.shift.exact="emit('commit:pin')" @mouseenter.shift.exact="emit('commit:preview')" @mouseenter.exact="emit('commit:closepreview')">
       <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" /></div>
       <div class="px-2 grid-cell"><pre>{{ nodeData.author.timestamp }}</pre></div>

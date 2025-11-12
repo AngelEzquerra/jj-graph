@@ -116,6 +116,9 @@ provide(GRAPH_ACTIONS_INJECTION_KEY, {
   viewDiff(commitId: string, leftPath: string, rightPath: string) {
     postIfJJRepo('viewDiff', (repo) => api.viewDiff(repo, commitId, leftPath, rightPath), true)
   },
+  newBetween(beforeChangeIds: string[], afterChangeIds: string[]) {
+    postIfJJRepo('newBetween', (repo) => api.newChange(repo, false, undefined, afterChangeIds.map(x => `change_id(${x})`).join(' | '), beforeChangeIds.map(x => `change_id(${x})`).join(' | '), undefined))
+  },
   newAfter(changeIds: string[]) {
     postIfJJRepo('newAfter', (repo) => api.newChange(repo, false, undefined, changeIds.map(x => `change_id(${x})`).join(' | '), undefined, undefined))
   },

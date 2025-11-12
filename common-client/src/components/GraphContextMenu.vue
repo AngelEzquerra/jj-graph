@@ -17,46 +17,119 @@ type ThisComponentProps = {
 
 const { disabled } = defineProps<ThisComponentProps>()
 
-const commitDataContext = ref<JJCommitGraphCommitNode>()
-const commitIdContext = ref<string>()
+const commitDataContext = ref<JJCommitGraphCommitNode[]>([])
 const bookmarkContext = ref<string>()
-const beforeCommitIdContext = ref<string>()
-const afterCommitIdContext = ref<string>()
+const beforeCommitContext = ref<JJCommitGraphCommitNode>()
+const afterCommitContext = ref<JJCommitGraphCommitNode>()
 
-function setCommitDataContext(commitData?: JJCommitGraphCommitNode) {
+function setCommitDataContext(commitData: JJCommitGraphCommitNode[]) {
   commitDataContext.value = commitData
-}
-
-function setCommitIdContext(commitId?: string) {
-  commitIdContext.value = commitId
 }
 
 function setBookmarkContext(bookmark?: string) {
   bookmarkContext.value = bookmark
 }
 
-function setBeforeAfterContext(data?: { before: string, after: string }) {
-  beforeCommitIdContext.value = data?.before
-  afterCommitIdContext.value = data?.after
+function setBeforeAfterContext(data?: { before: JJCommitGraphCommitNode, after: JJCommitGraphCommitNode }) {
+  beforeCommitContext.value = data?.before
+  afterCommitContext.value = data?.after
 }
+
+const singleCommitContext = computed(() => {
+  const commits = commitDataContext.value
+  if (commits && commits.length === 1) {
+    return commits[0]!
+  }
+  return undefined
+})
+
+const multipleCommitContext = computed(() => {
+  const commits = commitDataContext.value
+  if (commits && commits.length > 1) {
+    return commits
+  }
+  return undefined
+})
 
 provide(GRAPH_INTERACTION_CTX_IK, {
   setCommitDataContext,
-  setCommitIdContext,
   setBookmarkContext,
   setBeforeAfterContext,
 })
 
 const actions = inject(GRAPH_ACTIONS_INJECTION_KEY)!
 
-const commitContextItems: ContextMenuItem[] = [
+const multipleCommitContextItems: ContextMenuItem[] = [
   {
-    label: 'Create Bookmark...',
-    icon: 'i-lucide-bookmark-plus',
+    label: 'New (Merge)',
+    icon: 'i-lucide-plus',
     onSelect() {
-      const commitData = commitDataContext.value
+      const commitData = multipleCommitContext.value
       if (commitData) {
-        actions.bookmarkCreate(commitData.changeId)
+        actions.newFrom(commitData.map(x => x.changeId))
+      }
+    }
+  },
+  {
+    label: 'Insert After (Merge)',
+    icon: 'i-lucide-plus',
+    onSelect() {
+      const commitData = multipleCommitContext.value
+      if (commitData) {
+        actions.newAfter(commitData.map(x => x.changeId))
+      }
+    }
+  },
+  {
+    label: 'Insert Before (Merge)',
+    icon: 'i-lucide-plus',
+    onSelect() {
+      const commitData = multipleCommitContext.value
+      if (commitData) {
+        actions.newBefore(commitData.map(x => x.changeId))
+      }
+    }
+  },
+  {
+    label: 'Abandon',
+    icon: 'i-lucide-trash',
+    onSelect() {
+      const commitData = multipleCommitContext.value
+      if (commitData) {
+        actions.abandon(commitData.map(x => x.changeId))
+      }
+    }
+  },
+]
+
+const singleCommitContextItems: ContextMenuItem[] = [
+  {
+    label: 'New',
+    icon: 'i-lucide-plus',
+    onSelect() {
+      const commitData = singleCommitContext.value
+      if (commitData) {
+        actions.newFrom([commitData.changeId])
+      }
+    }
+  },
+  {
+    label: 'Insert After',
+    icon: 'i-lucide-plus',
+    onSelect() {
+      const commitData = singleCommitContext.value
+      if (commitData) {
+        actions.newAfter([commitData.changeId])
+      }
+    }
+  },
+  {
+    label: 'Insert Before',
+    icon: 'i-lucide-plus',
+    onSelect() {
+      const commitData = singleCommitContext.value
+      if (commitData) {
+        actions.newBefore([commitData.changeId])
       }
     }
   },
@@ -64,7 +137,7 @@ const commitContextItems: ContextMenuItem[] = [
     label: 'Describe...',
     icon: 'i-lucide-pencil',
     onSelect() {
-      const commitData = commitDataContext.value
+      const commitData = singleCommitContext.value
       if (commitData) {
         actions.describe(commitData.changeId, commitData.description)
       }
@@ -74,31 +147,29 @@ const commitContextItems: ContextMenuItem[] = [
     label: 'Edit',
     icon: 'i-lucide-log-in',
     onSelect() {
-      const commitData = commitDataContext.value
+      const commitData = singleCommitContext.value
       if (commitData) {
         actions.edit(commitData.changeId)
       }
     }
   },
   {
-    label: 'Duplicate',
-    icon: 'i-lucide-copy',
-  },
-  {
-    label: 'Revert',
-    icon: 'i-lucide-undo-2',
-  },
-  {
-    label: 'Restore From',
-    icon: 'i-lucide-archive-restore',
-  },
-  {
     label: 'Abandon',
     icon: 'i-lucide-trash',
     onSelect() {
-      const commitData = commitDataContext.value
+      const commitData = singleCommitContext.value
       if (commitData) {
-        actions.abandon(commitData.changeId)
+        actions.abandon([commitData.changeId])
+      }
+    }
+  },
+  {
+    label: 'Create Bookmark...',
+    icon: 'i-lucide-bookmark-plus',
+    onSelect() {
+      const commitData = singleCommitContext.value
+      if (commitData) {
+        actions.bookmarkCreate(commitData.changeId)
       }
     }
   },
@@ -147,6 +218,20 @@ const bookmarkContextItems: ContextMenuItem[] = [
   },
 ]
 
+const beforeAfterContextItems: ContextMenuItem[] = [
+  {
+    label: 'New Between',
+    icon: 'i-lucide-plus',
+    onSelect() {
+      const beforeCommit = beforeCommitContext.value
+      const afterCommit = afterCommitContext.value
+      if (beforeCommit && afterCommit) {
+        actions.newBetween([beforeCommit.changeId], [afterCommit.changeId])
+      }
+    }
+  },
+]
+
 const emptyContextItems: ContextMenuItem[][] = [[
   {
     label: 'No Actions Available',
@@ -154,31 +239,39 @@ const emptyContextItems: ContextMenuItem[][] = [[
   }
 ]]
 
-const commitContextOnlyItems: ContextMenuItem[][] = [
-  commitContextItems
-]
-
-const commitAndBookmarkContextItems: ContextMenuItem[][] = [
-  commitContextItems,
-  bookmarkContextItems
-]
-
 const menuItems = computed<ContextMenuItem[][]>(() => {
-  const commitIdCtx = commitIdContext.value
+  const singleCommitCtx = singleCommitContext.value
+  const multipleCommitCtx = multipleCommitContext.value
   const bookmarkCtx = bookmarkContext.value
+  const beforeCommitCtx = beforeCommitContext.value
+  const afterCommitCtx = afterCommitContext.value
+
+  const ctxItems: ContextMenuItem[][] = []
+
+  if (beforeCommitCtx && afterCommitCtx) {
+    ctxItems.push(beforeAfterContextItems)
+  }
+
+  if (multipleCommitCtx) {
+    ctxItems.push(multipleCommitContextItems)
+  } else if (singleCommitCtx) {
+    ctxItems.push(singleCommitContextItems)
+  }
 
   if (bookmarkCtx) {
-    return commitAndBookmarkContextItems
-  } else if (commitIdCtx) {
-    return commitContextOnlyItems
+    ctxItems.push(bookmarkContextItems)
   }
-  return emptyContextItems
+
+  if (ctxItems.length === 0) {
+    ctxItems.push(emptyContextItems)
+  }
+
+  return ctxItems
 })
 
 function onOpenChange(open: boolean) {
   if (!open) {
-    setCommitDataContext(undefined)
-    setCommitIdContext(undefined)
+    setCommitDataContext([])
     setBookmarkContext(undefined)
     setBeforeAfterContext(undefined)
   }

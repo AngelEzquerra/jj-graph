@@ -6,10 +6,9 @@ import type { InjectionKey } from "vue"
 import type { JJCommitGraphCommitNode } from "@common/jj-graph-parser/commit-graph-parser"
 
 export type GraphInteractionContextProvider = {
-  setCommitDataContext: (commitData?: JJCommitGraphCommitNode) => void
-  setCommitIdContext: (commitId?: string) => void
+  setCommitDataContext: (commits: JJCommitGraphCommitNode[]) => void
   setBookmarkContext: (bookmark?: string) => void
-  setBeforeAfterContext: (data?: { before: string, after: string }) => void
+  setBeforeAfterContext: (data?: { before: JJCommitGraphCommitNode, after: JJCommitGraphCommitNode }) => void
 }
 
 export const GRAPH_INTERACTION_CTX_IK = Symbol() as InjectionKey<GraphInteractionContextProvider>

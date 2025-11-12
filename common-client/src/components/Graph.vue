@@ -162,6 +162,11 @@ function toggleNodeSelection(nodeId: NodeId, multiple: boolean) {
   }
 }
 
+function clearNodeSelection() {
+  const snIds = selectedNodeIds.value
+  snIds.splice(0, Infinity)
+}
+
 function openCommitDetailsOrBringToFront(nodeId: NodeId) {
   const pinnedNodeIds = commitDetailsPinnedNodeIds.value
   const indexOfNodeId = pinnedNodeIds.indexOf(nodeId)
@@ -255,16 +260,6 @@ function commitIdFromNodeData(data?: JJCommitGraphNodeData) {
 
 const interactionCtx = inject(GRAPH_INTERACTION_CTX_IK)!
 
-const highlightedCommit = computed(() => {
-  const hNodeId = highlightedNodeId.value
-  if (hNodeId === undefined) {
-    return undefined
-  }
-
-  const hNode = commits[hNodeId]!
-  return hNode
-})
-
 const highlightedBeforeAfterId = computed(() => {
   const hEdgeId = highlightedEdgeId.value
   const eToDraw = edgesToDraw.value
@@ -281,22 +276,22 @@ const highlightedBeforeAfterId = computed(() => {
   const fromNode = commits[hEdge.from]
   const toNode = commits[hEdge.to]
 
-  const fromCommitId = commitIdFromNodeData(fromNode?.data)
-  const toCommitId = commitIdFromNodeData(toNode?.data)
-
-  if (fromCommitId === undefined || toCommitId === undefined) {
+  if (fromNode?.data?.type !== 'commit' || toNode?.data?.type !== 'commit') {
     return undefined
   }
 
-  return { before: fromCommitId, after: toCommitId }
+  return { before: fromNode.data, after: toNode.data }
 })
 
 function setContextMenu() {
-  const hCommit = highlightedCommit.value
-  interactionCtx.setCommitIdContext(commitIdFromNodeData(hCommit?.data))
+  const sCommits = selectedCommits.value
+  const hNodeId = highlightedNodeId.value
+  const hNodeData = commits[hNodeId]?.data
   interactionCtx.setBeforeAfterContext(highlightedBeforeAfterId.value)
-  if (hCommit?.data?.type === 'commit') {
-    interactionCtx.setCommitDataContext(hCommit.data)
+  if (sCommits.length === 0 && hNodeData?.type === 'commit') {
+    interactionCtx.setCommitDataContext([hNodeData])
+  } else {
+    interactionCtx.setCommitDataContext(sCommits)
   }
 }
 
@@ -313,7 +308,7 @@ watch(selectedCommits, (value) => {
 
 <template>
   <div class="flex">
-    <div class="grid-layout user-select-none flex-grow">
+    <div class="grid-layout user-select-none flex-grow focus:outline-none" tabindex="0" @contextmenu="setContextMenu()" @keyup.esc="clearNodeSelection()">
       <div class="px-2 grid-header">Graph</div>
       <div class="px-2 grid-header">Description</div>
 
@@ -321,7 +316,7 @@ watch(selectedCommits, (value) => {
       <div class="px-2 grid-header">Author</div>
       <div class="px-2 grid-header">Change</div>
       <div class="px-2 grid-header">Commit</div>
-      <div class="graph-grid-container" @contextmenu="setContextMenu()">
+      <div class="graph-grid-container">
         <div class="display-contents">
           <CommitOverview
             v-for="(node, r) in commits"
@@ -340,7 +335,7 @@ watch(selectedCommits, (value) => {
             @commit:closepreview="closeCommitDetailsPreview()"
           />
         </div>
-        <div class="graph-container pointer-events-none">
+        <div class="graph-container pointer-events-none" @contextmenu="clearNodeSelection()">
           <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-none" :width="unit * graphColumnCount" :height="unit * commits.length">
             <GraphLayer
               :nodes-to-draw="nodesToDraw"

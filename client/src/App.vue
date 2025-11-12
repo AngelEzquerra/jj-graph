@@ -9,7 +9,8 @@ SPDX-License-Identifier: Apache-2.0
 import * as api from '@common/api'
 import { computed, effect, provide, ref, useTemplateRef } from 'vue';
 import GraphContextMenu from '@common-client/components/GraphContextMenu.vue';
-import Graph from '@common-client/components/Graph.vue';
+import IdPrefix from '@common-client/components/IdPrefix.vue';
+import Graph, { type GraphMode } from '@common-client/components/Graph.vue';
 import DevTestOptions from '@common-client/components/DevTestOptions.vue';
 import { useDevTestOptionsStore } from '@common-client/stores/devTestOptions';
 import { useRepoSourceStore, generateInlineGraph } from '@common-client/stores/repoSource';
@@ -17,6 +18,7 @@ import { storeToRefs } from 'pinia';
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 import { refDebounced } from '@vueuse/core';
 import { LoaderCircle } from 'lucide-vue-next';
+import type { JJCommitGraphCommitNode } from '@common/jj-graph-parser/commit-graph-parser';
 
 type NodeId = number
 type GraphNode<NodeData> = {
@@ -158,8 +160,12 @@ provide(GRAPH_ACTIONS_INJECTION_KEY, {
     postIfJJRepo('bookmarkRename', (repo) => api.bookmarkRename(repo, oldName, newName))
   },
   async bookmarkSet(name: string) {
-    console.warn("Selecting commits is still not implemented")
-    // postIfJJRepo('bookmarkSet', (repo) => api.bookmarkSet(repo, name, changeId))
+    const commits = await promptUserForCommitSelection({ multiple: false })
+    if (!commits || commits.length < 1) {
+      return
+    }
+    const commit = commits[0]!
+    postIfJJRepo('bookmarkSet', (repo) => api.bookmarkSet(repo, name, commit.changeId, true))
   }
 })
 
@@ -178,6 +184,42 @@ async function getDescribeInput(existingDesc: string) {
     console.log('existingDesc', existingDesc)
     describeInputDialog.value?.showModal()
   })
+}
+
+const graphMode = ref<GraphMode>('normal')
+
+let commitSelectionCb: ((commits: JJCommitGraphCommitNode[]) => void) | undefined
+
+async function promptUserForCommitSelection(opts?: { multiple?: boolean }): Promise<JJCommitGraphCommitNode[]> {
+  graphMode.value = opts?.multiple ? 'modalSelectMultiple' : 'modalSelectSingle'
+  return new Promise<JJCommitGraphCommitNode[]>((resolve, reject) => {
+    if (commitSelectionCb) {
+      commitSelectionCb([])
+    }
+    commitSelectionCb = (commits) => {
+      resolve(commits)
+      commitSelectionCb = undefined
+      graphMode.value = 'normal'
+    }
+  })
+}
+
+const selectedCommits = ref<JJCommitGraphCommitNode[]>([])
+
+function setSelectedCommits(data: JJCommitGraphCommitNode[]) {
+  selectedCommits.value = data
+}
+
+function handleSelectionSubmit() {
+  if (commitSelectionCb) {
+    commitSelectionCb(selectedCommits.value)
+  }
+}
+
+function handleSelectionCancel() {
+  if (commitSelectionCb) {
+    commitSelectionCb([])
+  }
 }
 
 </script>
@@ -201,8 +243,19 @@ async function getDescribeInput(existingDesc: string) {
       <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
       <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" />
     </div>
-    <GraphContextMenu>
-      <Graph :key="graphId" :commits="logNodes" :opts="opts" />
+    <div v-if="graphMode !== 'normal'">
+      <!-- <label>Mode: {{ graphMode }}</label> -->
+      <div class="flex gap-2">
+        <label>Selection</label>
+        <span v-for="s in selectedCommits"><IdPrefix :id="s.changeId" :prefix="s.changeIdPrefixLen" :prefix-min="8" /></span>
+      </div>
+      <div class="flex gap-2">
+        <button @click="handleSelectionSubmit">Submit</button>
+        <button @click="handleSelectionCancel">Cancel</button>
+      </div>
+    </div>
+    <GraphContextMenu :disabled="graphMode !== 'normal'">
+      <Graph :key="graphId" :commits="logNodes" :opts="opts" :mode="graphMode" @commit-selection="setSelectedCommits" />
     </GraphContextMenu>
   </UApp>
 </template>
@@ -221,7 +274,6 @@ async function getDescribeInput(existingDesc: string) {
 .revset-input {
   width: fit-content;
 }
-
 </style>
 
 <style>

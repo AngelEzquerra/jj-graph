@@ -11,6 +11,12 @@ import { GRAPH_INTERACTION_CTX_IK } from '@common-client/providers/graph-interac
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 import type { JJCommitGraphCommitNode } from '@common/jj-graph-parser/commit-graph-parser';
 
+type ThisComponentProps = {
+  disabled: boolean
+}
+
+const { disabled } = defineProps<ThisComponentProps>()
+
 const commitDataContext = ref<JJCommitGraphCommitNode>()
 const commitIdContext = ref<string>()
 const bookmarkContext = ref<string>()
@@ -180,7 +186,7 @@ function onOpenChange(open: boolean) {
 </script>
 
 <template>
-  <UContextMenu :items="menuItems" @update:open="onOpenChange">
+  <UContextMenu :items="menuItems" @update:open="onOpenChange" :disabled="disabled">
     <slot />
   </UContextMenu>
 </template>

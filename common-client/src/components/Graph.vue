@@ -6,10 +6,10 @@ SPDX-License-Identifier: LGPL-3.0-only
 
 <script lang="ts" setup>
 import NodeDescription from './NodeDescription.vue'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, inject, ref, watch, watchEffect } from 'vue'
 import { renderLogic } from '@common/jj-graph-renderer'
 import { unit } from '@common/jj-graph-renderer/svg-renderer'
-import { type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
+import { type JJCommitGraphCommitNode, type JJCommitGraphNodeData } from '@common/jj-graph-parser/commit-graph-parser'
 import GraphLayer from './GraphLayer.vue'
 import CommitDetails from './commit-details/CommitDetails.vue'
 import { type NodeColumnGenOptions } from '@common/jj-graph-renderer/layout'
@@ -25,12 +25,23 @@ type GraphNode<NodeData> = {
   children: NodeId[]
 }
 
+export type GraphMode =
+  | 'normal'
+  | 'modalSelectSingle'
+  | 'modalSelectMultiple'
+
 type ThisComponentProps = {
   commits: GraphNode<JJCommitGraphNodeData>[]
   opts: NodeColumnGenOptions
+  mode: GraphMode
 }
 
-const { commits, opts } = defineProps<ThisComponentProps>()
+type ThisComponentEmits = {
+  (e: 'commitSelection', commits: JJCommitGraphCommitNode[]): void
+}
+
+const { commits, opts, mode } = defineProps<ThisComponentProps>()
+const emit = defineEmits<ThisComponentEmits>()
 
 const debugComputed = false
 
@@ -135,14 +146,15 @@ function closeCommitDetails(nodeId: NodeId) {
 }
 
 function toggleNodeSelection(nodeId: NodeId, multiple: boolean) {
+  const multipleAllowed = mode !== 'modalSelectSingle'
   const snIds = selectedNodeIds.value
   const indexOfNodeId = snIds.indexOf(nodeId)
   if (indexOfNodeId >= 0) {
-    if (multiple) {
+    if (multiple && multipleAllowed) {
       snIds.splice(indexOfNodeId, 1)
     }
   } else {
-    if (multiple) {
+    if (multiple && multipleAllowed) {
       snIds.push(nodeId)
     } else {
       snIds.splice(0, Infinity, nodeId)
@@ -287,6 +299,15 @@ function setContextMenu() {
     interactionCtx.setCommitDataContext(hCommit.data)
   }
 }
+
+const selectedCommits = computed(() => {
+  const snIds = selectedNodeIds.value
+  return snIds.map(x => commits[x]!.data).filter(nodeData => nodeData?.type === 'commit')
+})
+
+watch(selectedCommits, (value) => {
+  emit('commitSelection', value)
+})
 
 </script>
 

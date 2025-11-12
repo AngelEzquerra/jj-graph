@@ -214,7 +214,6 @@ function commitDetailsPolygon(y: number) {
   <div class="flex">
     <div class="grid-layout user-select-none flex-grow">
       <div class="px-2 grid-header">Graph</div>
-      <div class="px-2 grid-header">Commands</div>
       <div class="px-2 grid-header">Description</div>
 
       <div class="px-2 grid-header">Date</div>
@@ -368,7 +367,7 @@ function commitDetailsPolygon(y: number) {
 .grid-layout {
   display: grid;
 
-  grid-template-columns: 300px 1fr 5fr repeat(2, 1fr) max-content max-content;
+  grid-template-columns: 300px 5fr repeat(2, 1fr) max-content max-content;
 }
 
 .graph-grid-container {

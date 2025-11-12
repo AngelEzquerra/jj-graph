@@ -40,17 +40,6 @@ const emit = defineEmits<ThisComponentEmits>()
   <div class="display-contents graph-row" :class="{ 'selected': selected }" @mouseenter="emit('mouseenter')" @mouseleave="emit('mouseleave')" @click="emit('click')">
     <div class="display-contents" v-if="nodeData.type === 'commit'">
       <div class="px-2 grid-cell"></div>
-      <div class="px-2 grid-cell command-bar">
-        <template v-if="highlighted || selected">
-          <!-- <span class="command" :class="{ 'disabled': nodeData.isImmutable }">D</span> -->
-          <button class="command" title="Edit"          @click.stop="actions.edit(nodeData.changeId)"                           :disabled="nodeData.isWorkingCopy || nodeData.isImmutable"                          ><LogIn :size="20" /></button>
-          <button class="command" title="Describe"      @click.stop="actions.describe(nodeData.changeId, nodeData.description)" :disabled="nodeData.isImmutable"                                                    ><Pencil :size="20" /></button>
-          <button class="command" title="New"           @click.stop="actions.newFrom(nodeData.changeId)"                                                                                                            ><Plus :size="20" stroke-width="3" /></button>
-          <button class="command" title="Insert After"  @click.stop="actions.newAfter(nodeData.changeId)"                                                                                                           ><UpPlus :width="20" :height="20" /></button>
-          <button class="command" title="Insert Before" @click.stop="actions.newBefore(nodeData.changeId)"                      :disabled="nodeData.isImmutable"                                                    ><DownPlus :width="20" :height="20" /></button>
-          <button class="command" title="Abandon"       @click.stop="actions.abandon(nodeData.changeId)"                        :disabled="nodeData.isImmutable || !nodeData.isEmpty || nodeData.parents.length > 1"><Trash2 :size="20" /></button>
-        </template>
-      </div>
       <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" /></div>
       <div class="px-2 grid-cell"><pre>{{ nodeData.author.timestamp }}</pre></div>
       <div class="px-2 grid-cell"><span>{{ nodeData.author.name }}</span></div>
@@ -58,7 +47,6 @@ const emit = defineEmits<ThisComponentEmits>()
       <div class="px-2 grid-cell"><IdPrefix :id="nodeData.commitId" :prefix="nodeData.commitIdPrefixLen" :prefix-min="8" /></div>
     </div>
     <div class="display-contents" v-else-if="nodeData.type === 'elided'">
-      <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" /></div>
       <div class="px-2 grid-cell"></div>
@@ -68,7 +56,6 @@ const emit = defineEmits<ThisComponentEmits>()
     </div>
     <div class="display-contents" v-else-if="nodeData.type === 'commitId'">
       <div class="px-2 grid-cell"></div>
-      <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" /></div>
       <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell"></div>
@@ -76,7 +63,6 @@ const emit = defineEmits<ThisComponentEmits>()
       <div class="px-2 grid-cell"><pre>{{ nodeData.commitId.slice(0, 8) }}</pre></div>
     </div>
     <div class="display-contents" v-else>
-      <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell"></div>
       <div class="px-2 grid-cell node-description"></div>
       <div class="px-2 grid-cell"></div>
@@ -119,37 +105,6 @@ const emit = defineEmits<ThisComponentEmits>()
   white-space: nowrap;
 
   align-items: center;
-}
-
-.command {
-  display: block;
-
-  padding-inline: 0;
-  padding-block: 2px;
-  margin: 0;
-  outline: none;
-  border: none;
-
-  cursor: pointer;
-}
-
-.command {
-  background-color: transparent;
-  color: currentColor;
-}
-
-.command:not([disabled]):hover {
-  background-color: rgba(128, 128, 128, 0.5);
-}
-
-.command[disabled] {
-  cursor: not-allowed;
-  color: rgb(from currentColor calc(r * 0.6) calc(g * 0.6) calc(b * 0.6) );
-}
-
-.command-bar {
-  display: flex;
-  gap: 6px;
 }
 
 .pointer-events-none {

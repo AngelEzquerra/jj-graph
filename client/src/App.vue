@@ -241,10 +241,11 @@ function handleSelectionCancel() {
       </form>
     </dialog>
     <DevTestOptions />
-    <div>
-      <label>Revset</label>
+    <div class="m-4">
+      <!-- <label>Revset</label>
       <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
-      <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" />
+      <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" /> -->
+      <UInput v-model="revsetInput" placeholder="Revset" :loading="revsetInputLoading" icon="i-lucide-list-filter"  />
     </div>
     <div v-if="graphMode !== 'normal'">
       <!-- <label>Mode: {{ graphMode }}</label> -->

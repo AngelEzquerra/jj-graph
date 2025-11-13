@@ -26,6 +26,6 @@ const { id, prefix, prefixMin } = defineProps<ThisComponentProps>()
 }
 
 .id-rest {
-  color: rgb(from currentColor r g b / calc(alpha * 0.6))
+  color: var(--ui-text-muted)
 }
 </style>

@@ -105,7 +105,7 @@ const interactionCtx = inject(GRAPH_INTERACTION_CTX_IK)!
   justify-content: space-around;
   align-items: center;
 
-  color: black;
+  color: var(--ui-text-inverted);
 }
 
 .chip,
@@ -130,7 +130,7 @@ const interactionCtx = inject(GRAPH_INTERACTION_CTX_IK)!
 }
 
 .faded {
-  color: rgba(204, 204, 204, 0.45);
+  color: var(--ui-text-dimmed);
 }
 
 .chip-content,

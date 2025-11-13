@@ -353,7 +353,7 @@ watch(selectedCommits, (value) => {
         </div>
         <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length" :width="commitDetailsWidth">
           <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow pointer-events-all" @click="openCommitDetailsOrBringToFront(sn.id)">
-            <polygon :points="commitDetailsPolygon(sn.y)" stroke-width="2" fill="black" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
+            <polygon :points="commitDetailsPolygon(sn.y)" class="commit-details-polygon" stroke-width="2" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
             <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
               <div xmlns="http://www.w3.org/1999/xhtml" style="height: inherit;">
                 <CommitDetails :node-data="sn.data" :pinned="sn.pinned" @close="closeCommitDetails(sn.id)" @pin="pinCommitDetails(sn.id)" />
@@ -379,6 +379,10 @@ watch(selectedCommits, (value) => {
   overflow: visible;
 
   z-index: 2;
+}
+
+.commit-details-polygon {
+  fill: var(--ui-bg);
 }
 
 .shadow {
@@ -451,7 +455,7 @@ watch(selectedCommits, (value) => {
   position: sticky;
   top: 0;
 
-  background-color: black;
+  background-color: var(--ui-bg);
 
   z-index: 1;
 }

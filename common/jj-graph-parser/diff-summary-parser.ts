@@ -4,22 +4,27 @@
 
 import { type JJDiffStatusShort, type JJDiffSummaryRaw, type JJDiffSummaryFile, parseShortDiffStatus, getFullDiffStatus, type JJDiffSummaryFileEntry, parseFullDiffStatus, getShortDiffStatus } from "../models/diff"
 
+type DiffPathItem = {
+  left: string
+  right: string
+}
+
 export type DiffSummaryItem = {
   status: JJDiffStatusShort
-  pathItems: string[]
+  pathItems: DiffPathItem[]
   source: JJDiffSummaryFileEntry
   target: JJDiffSummaryFileEntry
 }
 
 type DiffSummaryTreeItemTree = {
   type: 'tree'
-  path: string
+  path: DiffPathItem[]
   children: DiffSummaryTree[]
 }
 
 type DiffSummaryTreeItemLeaf = {
   type: 'leaf'
-  path: string
+  path: DiffPathItem[]
   item: DiffSummaryItem
 }
 
@@ -65,11 +70,46 @@ function processPathParts(left: string, right: string, pathSep: string): [ prefi
   return [ prefix, suffix, leftOnly, rightOnly ]
 }
 
-function pathItemsNormalized(pathPart: string): string[] {
-  return pathPart.split(pathSep).filter(x => x)
+function pathItemsNormalized(pathPart: string): DiffPathItem[] {
+  return pathPart.split(pathSep).filter(x => x).map(x => ({ left: x, right: x }))
 }
 
-function splitPathIntoPathItems(path: string): [ leftPath: string, rightPath: string, pathItems: string[] ] {
+function diffPathItemsAreEqual(a: DiffPathItem[], b: DiffPathItem[]) {
+  if (a.length !== b.length) {
+    return false
+  }
+
+  for (let i = 0; i < a.length; i++) {
+    if (a[i]!.left !== b[i]!.left) {
+      return false;
+    }
+    if (a[i]!.right !== b[i]!.right) {
+      return false;
+    }
+  }
+  return true
+}
+
+function flattenDiffPathItemForDisplay(pathItem: DiffPathItem, wrapDiffWithBrackets: boolean): string {
+  const { left, right } = pathItem
+  if (left === right) {
+    return left
+  }
+  const diffPath = `${left} => ${right}`
+  return wrapDiffWithBrackets ? `{${diffPath}}` : diffPath
+}
+
+export function flattenDiffPathItemsForDisplay(pathItems: DiffPathItem[]): string {
+  if (pathItems.length === 0) {
+    return ''
+  }
+  if (pathItems.length === 1) {
+    return flattenDiffPathItemForDisplay(pathItems[0]!, false)
+  }
+  return pathItems.map(x => flattenDiffPathItemForDisplay(x, true)).join(pathSep)
+}
+
+function splitPathIntoPathItems(path: string): [ leftPath: string, rightPath: string, pathItems: DiffPathItem[] ] {
   const pathChangeMatch = path.match(/(.*)\{(.*) \=\> (.*)\}(.*)/)!
   if (pathChangeMatch != null) {
     const [ fullMatch, commonPrefix, leftOnly, rightOnly, commonSuffix ] = pathChangeMatch
@@ -79,7 +119,7 @@ function splitPathIntoPathItems(path: string): [ leftPath: string, rightPath: st
       leftPath, rightPath,
       [
         ...pathItemsNormalized(commonPrefix ?? ''),
-        `${leftOnly} => ${rightOnly}}`,
+        { left: leftOnly ?? '', right: rightOnly ?? '' },
         ...pathItemsNormalized(commonSuffix ?? ''),
       ]
     ]
@@ -122,21 +162,21 @@ export function parseDiffSummaryFiles(files: JJDiffSummaryFile[]): DiffSummaryIt
     const [ commonPrefix, commonSuffix, leftOnly, rightOnly ] = processPathParts(leftPath, rightPath, pathSep)
     return {
       status: shortStatus,
-      pathItems: [ ...pathItemsNormalized(commonPrefix), `${leftOnly} => ${rightOnly}`, ...pathItemsNormalized(commonSuffix) ],
+      pathItems: [ ...pathItemsNormalized(commonPrefix), { left: leftOnly , right: rightOnly }, ...pathItemsNormalized(commonSuffix) ],
       source,
       target,
     }
   })
 }
 
-function insertSummaryItem(tree: DiffSummaryTreeItemTree, path: string[], item: DiffSummaryItem) {
+function insertSummaryItem(tree: DiffSummaryTreeItemTree, path: DiffPathItem[][], item: DiffSummaryItem) {
   if (path.length <= 0) {
     return
   }
 
   if (path.length === 1) {
     const pathItem = path[0]!
-    const existingNode = tree.children.find(x => x.path === pathItem)
+    const existingNode = tree.children.find(x => diffPathItemsAreEqual(x.path, pathItem))
     if (existingNode) {
       throw new Error("Duplicate tree item")
     } else {
@@ -144,7 +184,7 @@ function insertSummaryItem(tree: DiffSummaryTreeItemTree, path: string[], item: 
     }
   } else {
     const pathItem = path[0]!
-    const existingTree = tree.children.find(x => x.path === pathItem)
+    const existingTree = tree.children.find(x => diffPathItemsAreEqual(x.path, pathItem))
     if (existingTree && existingTree.type === 'tree') {
       if (existingTree.type === 'tree') {
         insertSummaryItem(existingTree, path.slice(1), item)
@@ -163,7 +203,7 @@ function simplifyTree(tree: DiffSummaryTreeItemTree) {
   if (tree.children.length === 1) {
     const singleChild = tree.children[0]!
     if (singleChild.type === 'tree') {
-      tree.path = tree.path ? `${tree.path}${pathSep}${singleChild.path}`: singleChild.path
+      tree.path = [ ...tree.path, ...singleChild.path ]
       tree.children = singleChild.children
       simplifyTree(tree)
     }
@@ -189,9 +229,9 @@ function sortTree(tree: DiffSummaryTreeItemTree) {
 }
 
 export function parseDiffTree(summary: DiffSummaryItem[]): DiffSummaryTree {
-  const root: DiffSummaryTree = { type: 'tree', path: '', children: [] }
+  const root: DiffSummaryTree = { type: 'tree', path: [], children: [] }
   for (const summaryItem of summary) {
-    insertSummaryItem(root, summaryItem.pathItems, summaryItem)
+    insertSummaryItem(root, summaryItem.pathItems.map(x => [x]), summaryItem)
   }
 
   return sortTree(simplifyTree(root))

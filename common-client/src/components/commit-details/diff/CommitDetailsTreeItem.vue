@@ -6,7 +6,7 @@ SPDX-License-Identifier: LGPL-3.0-only
 
 <script setup lang="ts">
 import { inject, ref } from 'vue';
-import { type DiffSummaryTree } from '@common/jj-graph-parser/diff-summary-parser';
+import { type DiffSummaryTree, flattenDiffPathItemsForDisplay } from '@common/jj-graph-parser/diff-summary-parser';
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
 import { COMMIT_ID_INJECTION_KEY } from '@common-client/providers/commit-id-provider';
 
@@ -29,10 +29,10 @@ function toggleExpanded() {
 
 <template>
   <template v-if="tree.type === 'leaf'">
-    <div class="file" :class="[ `status-${tree.item.status}` ]"><span @click="actions.viewDiff(commitId, tree.item.source.path, tree.item.target.path)">{{ tree.path }}</span></div>
+    <div class="file" :class="[ `status-${tree.item.status}` ]"><span @click="actions.viewDiff(commitId, tree.item.source.path, tree.item.target.path)">{{ flattenDiffPathItemsForDisplay(tree.path) }}</span></div>
   </template>
   <template v-else-if="tree.type === 'tree'">
-    <template v-if="!tree.path">
+    <template v-if="tree.path.length === 0">
       <!-- Root node -->
       <template v-if="tree.children.length > 0">
         <CommitDetailsTreeItem v-for="c in tree.children" :tree="c" />
@@ -43,7 +43,7 @@ function toggleExpanded() {
     </template>
     <template v-else>
       <div class="tree">
-        <span class="tree-expand" @click.self="toggleExpanded">{{ (expanded ? '-' : '+') }} {{ tree.path }}</span>
+        <span class="tree-expand" @click.self="toggleExpanded">{{ (expanded ? '-' : '+') }} {{ flattenDiffPathItemsForDisplay(tree.path) }}</span>
         <div class="nested-tree" v-if="expanded"><CommitDetailsTreeItem v-for="c in tree.children" :tree="c" /></div>
       </div>
     </template>

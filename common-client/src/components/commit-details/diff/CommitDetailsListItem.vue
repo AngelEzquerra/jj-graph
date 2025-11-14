@@ -7,7 +7,7 @@ SPDX-License-Identifier: LGPL-3.0-only
 <script setup lang="ts">
 import { COMMIT_ID_INJECTION_KEY } from '@common-client/providers/commit-id-provider';
 import { GRAPH_ACTIONS_INJECTION_KEY } from '@common-client/providers/graph-actions-provider';
-import type { DiffSummaryItem } from '@common/jj-graph-parser/diff-summary-parser';
+import { type DiffSummaryItem, flattenDiffPathItemsForDisplay } from '@common/jj-graph-parser/diff-summary-parser';
 import { inject } from 'vue';
 
 const actions = inject(GRAPH_ACTIONS_INJECTION_KEY)!
@@ -22,7 +22,7 @@ const { item } = defineProps<ThisComponentProps>()
 </script>
 
 <template>
-  <div class="file" :class="[ `status-${item.status}` ]" @click="actions.viewDiff(commitId, item.source.path, item.target.path)"><span>{{ item.pathItems.join('/') }}</span></div>
+  <div class="file" :class="[ `status-${item.status}` ]" @click="actions.viewDiff(commitId, item.source.path, item.target.path)"><span>{{ flattenDiffPathItemsForDisplay(item.pathItems) }}</span></div>
 </template>
 
 <style scoped>

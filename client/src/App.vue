@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 <script setup lang="ts">
 
 import * as api from '@common/api'
-import { computed, effect, provide, ref, useTemplateRef } from 'vue';
+import { computed, effect, onMounted, onUnmounted, provide, ref, useTemplateRef, watch } from 'vue';
 import GraphContextMenu from '@common-client/components/GraphContextMenu.vue';
 import IdPrefix from '@common-client/components/IdPrefix.vue';
 import Graph, { type GraphMode } from '@common-client/components/Graph.vue';
@@ -44,6 +44,8 @@ const describeInput = ref<string>('')
 const revsetInput = ref<string>()
 const revsetInputDebounced = refDebounced(revsetInput, 1500)
 
+const latestOperationId = ref<string>()
+
 const revsetInputLoading = computed(() => revsetInput.value !== revsetInputDebounced.value)
 
 window.addEventListener('message', event => {
@@ -72,11 +74,17 @@ window.addEventListener('message', event => {
     case api.REQUEST_BOOKMARK_RENAME:
     case api.REQUEST_BOOKMARK_SET:
     {
-      refreshLog()
+      refreshLatestOperationId()
+      break;
+    }
+    case api.REQUEST_OPERATION_LATEST_ID: {
+      latestOperationId.value = message.response.id
       break;
     }
   }
 })
+
+watch(latestOperationId, () => refreshLog())
 
 const vscode = window.acquireVsCodeApi()
 vscode.postMessage(api.listRepos())
@@ -96,7 +104,25 @@ function refreshLog() {
   }
 }
 
+function refreshLatestOperationId() {
+  const gs = graphSource.value
+  const kgs = knownGraphSources.value
+  if (gs?.type === 'repo' && kgs.repo.some(x => x.value === gs.value)) {
+    vscode.postMessage(api.operationLatestId(gs.value))
+  }
+}
+
 effect(refreshLog)
+
+let latestOperationIdWatcherHandle: NodeJS.Timeout
+
+onMounted(() => {
+  latestOperationIdWatcherHandle = setInterval(refreshLatestOperationId, 1000)
+})
+
+onUnmounted(() => {
+  clearInterval(latestOperationIdWatcherHandle)
+})
 
 function postIfJJRepo(action: string, genReq: (repoPath: string) => unknown, dontShowModal?: boolean) {
   const gs = graphSource.value

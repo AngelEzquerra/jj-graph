@@ -8,6 +8,7 @@
   "engines": {
     "vscode": "^1.101.0"
   },
+  "icon": "resources/icon.png",
   "categories": [
     "Other"
   ],
@@ -18,7 +19,11 @@
       {
         "category": "JJ Graph",
         "command": "vscode-jj-graph.openNewTab",
-        "title": "JJ Graph (new tab)"
+        "title": "JJ Graph (new tab)",
+        "icon": {
+          "light": "resources/cmd-icon-light.svg",
+          "dark": "resources/cmd-icon-dark.svg"
+        }
       }
     ],
     "menus": {

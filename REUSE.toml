@@ -17,6 +17,9 @@ SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
 path = [
+  "extension/resources/cmd-icon-dark.svg",
+  "extension/resources/cmd-icon-light.svg",
+  "extension/resources/icon.png",
   "**/*.md",
 ]
 SPDX-FileCopyrightText = "2025 Velociraptor115"

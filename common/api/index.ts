@@ -10,6 +10,7 @@ import * as _edit from './edit'
 import * as _describe from './describe'
 import * as _abandon from './abandon'
 import * as _bookmark from './bookmark'
+import * as _operation from './operation'
 import type { RequestResponseTemplate } from "./base"
 
 export const REQUEST_LIST_REPOS = 'listRepos' as const
@@ -26,6 +27,8 @@ export const REQUEST_BOOKMARK_FORGET = 'bookmarkForget' as const
 export const REQUEST_BOOKMARK_RENAME = 'bookmarkRename' as const
 export const REQUEST_BOOKMARK_SET = 'bookmarkSet' as const
 
+export const REQUEST_OPERATION_LATEST_ID = 'operationLatestId' as const
+
 type JJApiRequestResponseListRepos = RequestResponseTemplate<typeof REQUEST_LIST_REPOS, _listRepos.RequestParameters, _listRepos.Response>
 type JJApiRequestResponseLog = RequestResponseTemplate<typeof REQUEST_LOG, _log.RequestParameters, _log.Response>
 type JJApiRequestResponseViewDiff = RequestResponseTemplate<typeof REQUEST_VIEW_DIFF, _viewDiff.RequestParameters, _viewDiff.Response>
@@ -38,6 +41,7 @@ type JJApiRequestResponseBookmarkDelete = RequestResponseTemplate<typeof REQUEST
 type JJApiRequestResponseBookmarkForget = RequestResponseTemplate<typeof REQUEST_BOOKMARK_FORGET, _bookmark.forget.RequestParameters, _bookmark.forget.Response>
 type JJApiRequestResponseBookmarkRename = RequestResponseTemplate<typeof REQUEST_BOOKMARK_RENAME, _bookmark.rename.RequestParameters, _bookmark.rename.Response>
 type JJApiRequestResponseBookmarkSet = RequestResponseTemplate<typeof REQUEST_BOOKMARK_SET, _bookmark.set.RequestParameters, _bookmark.set.Response>
+type JJApiRequestResponseOperationLatestId = RequestResponseTemplate<typeof REQUEST_OPERATION_LATEST_ID, _operation.latestId.RequestParameters, _operation.latestId.Response>
 
 export type JJApiRequestListRepos = JJApiRequestResponseListRepos['request']
 export type JJApiRequestLog = JJApiRequestResponseLog['request']
@@ -51,6 +55,7 @@ export type JJApiRequestBookmarkDelete = JJApiRequestResponseBookmarkDelete['req
 export type JJApiRequestBookmarkForget = JJApiRequestResponseBookmarkForget['request']
 export type JJApiRequestBookmarkRename = JJApiRequestResponseBookmarkRename['request']
 export type JJApiRequestBookmarkSet = JJApiRequestResponseBookmarkSet['request']
+export type JJApiRequestOperationLatestId = JJApiRequestResponseOperationLatestId['request']
 export type JJApiRequest =
   | JJApiRequestListRepos
   | JJApiRequestLog
@@ -64,6 +69,7 @@ export type JJApiRequest =
   | JJApiRequestBookmarkForget
   | JJApiRequestBookmarkRename
   | JJApiRequestBookmarkSet
+  | JJApiRequestOperationLatestId
 
 export type JJApiResponseListRepos = JJApiRequestResponseListRepos['response']
 export type JJApiResponseLog = JJApiRequestResponseLog['response']
@@ -77,6 +83,7 @@ export type JJApiResponseBookmarkDelete = JJApiRequestResponseBookmarkDelete['re
 export type JJApiResponseBookmarkForget = JJApiRequestResponseBookmarkForget['response']
 export type JJApiResponseBookmarkRename = JJApiRequestResponseBookmarkRename['response']
 export type JJApiResponseBookmarkSet = JJApiRequestResponseBookmarkSet['response']
+export type JJApiResponseOperationLatestId = JJApiRequestResponseOperationLatestId['response']
 export type JJApiResponse =
   | JJApiRequestResponseListRepos
   | JJApiRequestResponseLog
@@ -90,6 +97,7 @@ export type JJApiResponse =
   | JJApiRequestResponseBookmarkForget
   | JJApiRequestResponseBookmarkRename
   | JJApiRequestResponseBookmarkSet
+  | JJApiRequestResponseOperationLatestId
   | { type: 'unknown' }
 
 export function listRepos(): JJApiRequestListRepos {
@@ -138,4 +146,8 @@ export function bookmarkRename(repoDir: string, oldName: string, newName: string
 
 export function bookmarkSet(repoDir: string, name: string, changeId: string, allowBackwards?: boolean): JJApiRequestBookmarkSet {
   return { type: REQUEST_BOOKMARK_SET, repoDir, name, changeId, allowBackwards }
+}
+
+export function operationLatestId(repoDir: string): JJApiRequestOperationLatestId {
+  return { type: REQUEST_OPERATION_LATEST_ID, repoDir }
 }

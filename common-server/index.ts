@@ -11,6 +11,7 @@ import * as _edit from './request-handlers/edit'
 import * as _describe from './request-handlers/describe'
 import * as _abandon from './request-handlers/abandon'
 import * as _bookmark from './request-handlers/bookmark'
+import * as _operation from './request-handlers/operation'
 import { type IntegrationProvider } from './integration'
 
 export async function handleRequest(request: api.JJApiRequest, ip: IntegrationProvider): Promise<api.JJApiResponse> {
@@ -63,6 +64,10 @@ export async function handleRequest(request: api.JJApiRequest, ip: IntegrationPr
     case api.REQUEST_BOOKMARK_SET: {
       const response = await _bookmark.set.handleRequest(request, ip)
       return { type: api.REQUEST_BOOKMARK_SET, request, response }
+    }
+    case api.REQUEST_OPERATION_LATEST_ID: {
+      const response = await _operation.latestId.handleRequest(request, ip)
+      return { type: api.REQUEST_OPERATION_LATEST_ID, request, response }
     }
     default: {
       return { type: 'unknown' }

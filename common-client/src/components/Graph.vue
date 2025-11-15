@@ -162,6 +162,11 @@ function toggleNodeSelection(nodeId: NodeId, multiple: boolean) {
   }
 }
 
+function handleEscInGraph() {
+  clearNodeSelection()
+  closeCommitDetailsPreview()
+}
+
 function clearNodeSelection() {
   const snIds = selectedNodeIds.value
   snIds.splice(0, Infinity)
@@ -193,6 +198,36 @@ function pinCommitDetails(nodeId: NodeId) {
   }
   pinnedNodeIds.push(nodeId)
   commitDetailsPreviewNodeId.value = undefined
+}
+
+function toggleCommitDetailsPinned(nodeId: NodeId) {
+  const pinnedNodeIds = commitDetailsPinnedNodeIds.value
+  const indexOfNodeId = pinnedNodeIds.indexOf(nodeId)
+  if (indexOfNodeId >= 0) {
+    pinnedNodeIds.splice(indexOfNodeId, 1)
+  } else {
+    pinnedNodeIds.push(nodeId)
+  }
+  commitDetailsPreviewNodeId.value = undefined
+}
+
+function toggleCommitDetailsPreview(nodeId: NodeId) {
+  const pinnedNodeIds = commitDetailsPinnedNodeIds.value
+  const previewNodeId = commitDetailsPreviewNodeId.value
+  const indexOfNodeId = pinnedNodeIds.indexOf(nodeId)
+  if (indexOfNodeId >= 0) {
+    // A pinned node. Bring it to the front
+    pinnedNodeIds.splice(indexOfNodeId, 1)
+    pinnedNodeIds.push(nodeId)
+    commitDetailsPreviewNodeId.value = undefined
+  } else {
+    // Toggle the preview
+    if (previewNodeId === nodeId) {
+      commitDetailsPreviewNodeId.value = undefined
+    } else {
+      commitDetailsPreviewNodeId.value = nodeId
+    }
+  }
 }
 
 const selectedNodesToDraw = computedL('selectedNodesToDraw', () => {
@@ -308,7 +343,7 @@ watch(selectedCommits, (value) => {
 
 <template>
   <div class="flex">
-    <div class="grid-layout user-select-none flex-grow focus:outline-none" tabindex="0" @contextmenu="setContextMenu()" @keyup.esc="clearNodeSelection()">
+    <div class="grid-layout user-select-none flex-grow focus:outline-none" tabindex="0" @contextmenu="setContextMenu()" @keyup.esc="handleEscInGraph()">
       <div class="px-2 grid-header">Graph</div>
       <div class="px-2 grid-header">Description</div>
 
@@ -330,8 +365,8 @@ watch(selectedCommits, (value) => {
             @mouseleave="removeNodeHighlight"
             @select:single="toggleNodeSelection(node.id, false)"
             @select:multiple="toggleNodeSelection(node.id, true)"
-            @commit:pin="pinCommitDetails(node.id)"
-            @commit:preview="openCommitDetailsOrBringToFront(node.id)"
+            @commit:pin="toggleCommitDetailsPinned(node.id)"
+            @commit:preview="toggleCommitDetailsPreview(node.id)"
             @commit:closepreview="closeCommitDetailsPreview()"
           />
         </div>

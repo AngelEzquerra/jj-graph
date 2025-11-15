@@ -64,53 +64,44 @@ const edgesToDraw = computedL('edgesToDraw', () => renderData.value[2].map(x => 
 const highlightedNodeId = ref<NodeId>()
 const highlightedEdgeId = ref<EdgeId>()
 const emptyNodeIdSet: NodeId[] = []
-const highlightedNodeIdComputed = computedL('highlightedNodeIdComputed', () => {
+const graphHighlightedNodeIds = computedL('graphHighlightedNodeIds', () => {
   const hNodeId = highlightedNodeId.value
   const hEdgeId = highlightedEdgeId.value
   const eToDraw = edgesToDraw.value
 
   if (hNodeId !== undefined) {
-    return hNodeId
+    return [ hNodeId ]
   }
   if (hEdgeId !== undefined) {
     const hEdge = eToDraw[hEdgeId]
     if (hEdge !== undefined) {
-      return hEdge.from
+      return [ hEdge.from, hEdge.to ]
     }
   }
+  return []
 })
-const highlightedParentNodeIds = computedL('highlightedParentNodeIds', () => {
+
+const graphRaisedNodeIds = computedL('graphRaisedNodeIds', () => {
   const hNodeId = highlightedNodeId.value
-  const hEdgeId = highlightedEdgeId.value
   const eToDraw = edgesToDraw.value
-  if (hNodeId === undefined && hEdgeId === undefined) {
-    return emptyNodeIdSet
-  } else if (hNodeId === undefined) {
-    const hEdge = eToDraw[hEdgeId!]
-    if (hEdge === undefined) {
-      return emptyNodeIdSet
-    }
-    return [ hEdge.to ]
-  } else {
-    const hNode = commits[hNodeId]
-    if (hNode === undefined) {
-      return emptyNodeIdSet
-    }
-    return hNode.parents
+
+  if (hNodeId !== undefined) {
+    return eToDraw.filter(e => e.from === hNodeId || e.to === hNodeId).map(e => e.from === hNodeId ? e.to : e.from)
   }
+  return emptyNodeIdSet
 })
 
 const emptyEdgeIdSet = new Set<number>()
-const highlightedEdges = computedL('highlightedEdges', () => {
+const graphHighlightedEdges = computedL('graphHighlightedEdges', () => {
   const hNodeId = highlightedNodeId.value
   const hEdgeId = highlightedEdgeId.value
   const eToDraw = edgesToDraw.value
-  if (hNodeId === undefined && hEdgeId === undefined) {
+  if (hEdgeId === undefined && hNodeId === undefined) {
     return emptyEdgeIdSet
   } else if (hNodeId === undefined) {
     return new Set([ hEdgeId! ])
   } else {
-    return new Set(eToDraw.map((e, i) => [ e, i ] as const).filter(([ e, i ]) => e.from === hNodeId).map(([ e, i ]) => i))
+    return new Set(eToDraw.map((e, i) => [ e, i ] as const).filter(([ e, i ]) => e.from === hNodeId || e.to === hNodeId).map(([ e, i ]) => i))
   }
 })
 
@@ -344,7 +335,7 @@ const graphWidth = computed(() => unit * graphColumnCount.value)
 </script>
 
 <template>
-  <div class="flex graph-layout-vars">
+  <div class="flex graph-vars">
     <div class="grid-layout user-select-none flex-grow focus:outline-none" tabindex="0" @contextmenu="setContextMenu()" @keyup.esc="handleEscInGraph()">
       <div class="px-2 grid-header">Graph</div>
       <div class="px-2 grid-header">Description</div>
@@ -373,14 +364,14 @@ const graphWidth = computed(() => unit * graphColumnCount.value)
           />
         </div>
         <div class="graph-container pointer-events-none" @contextmenu="clearNodeSelection()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-none" :width="graphWidth" :height="unit * commits.length">
+          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-all" :width="graphWidth" :height="unit * commits.length">
             <GraphLayer
               :nodes-to-draw="nodesToDraw"
               :edges-to-draw="edgesToDraw"
               :color-map="colorMap"
-              :highlighted-node-id="highlightedNodeIdComputed"
-              :highlighted-parent-node-ids="highlightedParentNodeIds"
-              :highlighted-edges="highlightedEdges"
+              :highlighted-node-ids="graphHighlightedNodeIds"
+              :raised-node-ids="graphRaisedNodeIds"
+              :highlighted-edges="graphHighlightedEdges"
               @mouse-enter-node="highlightNode"
               @mouse-leave-node="removeNodeHighlight"
               @mouse-enter-edge="highlightEdge"
@@ -388,7 +379,7 @@ const graphWidth = computed(() => unit * graphColumnCount.value)
             />
           </svg>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length" :width="commitDetailsWidth">
+        <svg xmlns="http://www.w3.org/2000/svg" class="commit-details-svg pointer-events-none" :height="unit * commits.length" :width="commitDetailsWidth" @contextmenu.stop>
           <g v-for="sn in selectedNodesToDraw" :key="sn.id" class="shadow pointer-events-all" @click="openCommitDetailsOrBringToFront(sn.id)">
             <polygon :points="commitDetailsPolygon(sn.y)" class="commit-details-polygon" stroke-width="2" :stroke="colorMap[sn.c % colorMap.length]" stroke-linejoin="round"></polygon>
             <foreignObject :x="commitDetailsLeftOffset" :y="sn.y - (commitDetailsHeight / 2)" :width="commitDetailsWidth" :height="commitDetailsHeight">
@@ -405,6 +396,10 @@ const graphWidth = computed(() => unit * graphColumnCount.value)
 </template>
 
 <style scoped>
+
+.pointer-events-all {
+  pointer-events: all;
+}
 
 .commit-details-svg {
   position: absolute;
@@ -435,9 +430,12 @@ const graphWidth = computed(() => unit * graphColumnCount.value)
   /* z-index: -1; */
 }
 
-.graph-layout-vars {
+.graph-vars {
   --max-graph-width: 200px;
   --min-graph-width: 75px;
+
+  --jj-graph-bg-color: var(--ui-bg);
+  --jj-graph-highlight-color: var(--ui-bg-inverted)
 }
 
 .graph-grid-container {

@@ -339,10 +339,12 @@ watch(selectedCommits, (value) => {
   emit('commitSelection', value)
 })
 
+const graphWidth = computed(() => unit * graphColumnCount.value)
+
 </script>
 
 <template>
-  <div class="flex">
+  <div class="flex graph-layout-vars">
     <div class="grid-layout user-select-none flex-grow focus:outline-none" tabindex="0" @contextmenu="setContextMenu()" @keyup.esc="handleEscInGraph()">
       <div class="px-2 grid-header">Graph</div>
       <div class="px-2 grid-header">Description</div>
@@ -371,7 +373,7 @@ watch(selectedCommits, (value) => {
           />
         </div>
         <div class="graph-container pointer-events-none" @contextmenu="clearNodeSelection()">
-          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-none" :width="unit * graphColumnCount" :height="unit * commits.length">
+          <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-none" :width="graphWidth" :height="unit * commits.length">
             <GraphLayer
               :nodes-to-draw="nodesToDraw"
               :edges-to-draw="edgesToDraw"
@@ -433,11 +435,13 @@ watch(selectedCommits, (value) => {
   /* z-index: -1; */
 }
 
+.graph-layout-vars {
+  --max-graph-width: 200px;
+  --min-graph-width: 75px;
+}
+
 .graph-grid-container {
   position: relative;
-
-  --graph-width: 200px;
-  --content-width: 400px;
 }
 
 .user-select-none {
@@ -449,7 +453,7 @@ watch(selectedCommits, (value) => {
   top: 0;
   bottom: 0;
 
-  width: var(--graph-width);
+  width: var(--max-graph-width);
   overflow-x: auto;
   overflow-y: hidden; /* Why do we need this workaround. Let's see if we can fix it sometime */
 }
@@ -506,7 +510,7 @@ watch(selectedCommits, (value) => {
 .grid-layout {
   display: grid;
 
-  grid-template-columns: 300px 5fr repeat(2, 1fr) max-content max-content;
+  grid-template-columns:  max(min(var(--max-graph-width), calc(v-bind('graphWidth') * 1px)), var(--min-graph-width)) 5fr repeat(2, 1fr) max-content max-content;
 }
 
 .graph-grid-container {

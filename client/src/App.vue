@@ -24,6 +24,7 @@ type NodeId = number
 type GraphNode<NodeData> = {
   id: NodeId
   data?: NodeData
+  glyph?: string
   parents: NodeId[]
   children: NodeId[]
 }

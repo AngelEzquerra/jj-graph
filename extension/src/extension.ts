@@ -102,6 +102,7 @@ function prepareWebView(context: vscode.ExtensionContext) {
     const dependencyNameList: string[] = [
         "index.css",
         "index.js",
+        "CascadiaMono.woff2",
     ];
     const dependencyList: vscode.Uri[] = dependencyNameList.map((item) =>
         panel.webview.asWebviewUri(
@@ -117,6 +118,12 @@ function prepareWebView(context: vscode.ExtensionContext) {
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JJ Graph</title>
+    <style>
+      @font-face {
+        font-family: 'BundledCascadiaMono';
+        src: url('${dependencyList[2]}');
+      }
+    </style>
     <script type="module" crossorigin src="${dependencyList[1]}"></script>
     <link rel="stylesheet" crossorigin href="${dependencyList[0]}">
   </head>

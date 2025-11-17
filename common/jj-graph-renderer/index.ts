@@ -19,6 +19,7 @@ type GraphNodeColumn = number
 type NodeId = number
 type Node = {
   id: NodeId,
+  glyph?: string
   parents: NodeId[]
   children: NodeId[]
 }

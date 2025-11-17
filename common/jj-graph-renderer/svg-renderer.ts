@@ -13,6 +13,7 @@ type GraphNodeColor = number
 
 type Node = {
   id: NodeId
+  glyph?: string
 }
 
 export type NodeToDraw = {
@@ -20,6 +21,7 @@ export type NodeToDraw = {
   x: number
   y: number
   c: ColorId
+  t?: string
 }
 
 export type EdgeToDraw = {
@@ -48,7 +50,8 @@ export function genNodesToDraw(nodes: Node[], nodeColumns: GraphNodeColumn[], no
       id: node.id,
       x: col * unit + centerOffset,
       y: row * unit + centerOffset,
-      c: nodeColors[node.id]!
+      c: nodeColors[node.id]!,
+      t: node.glyph,
     }
     return circleData
   })

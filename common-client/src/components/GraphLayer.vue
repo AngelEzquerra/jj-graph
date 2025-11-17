@@ -5,6 +5,12 @@ SPDX-License-Identifier: LGPL-3.0-only
 -->
 
 <script lang="ts" setup>
+import { useDevTestOptionsStore } from '@common-client/stores/devTestOptions';
+import { storeToRefs } from 'pinia';
+
+const devTestOptionsStore = useDevTestOptionsStore()
+const { useLogNodeMarkersOption, logNodeMarkerSizeOption } = storeToRefs(devTestOptionsStore)
+
 type NodeId = number
 type EdgeId = number
 
@@ -13,6 +19,7 @@ type NodeToDraw = {
     x: number;
     y: number;
     c: number;
+    t?: string
 }
 
 type EdgeToDraw = {
@@ -42,6 +49,22 @@ type ThisComponentEmits = {
 const { nodesToDraw, edgesToDraw, colorMap, highlightedNodeIds, raisedNodeIds, highlightedEdges } = defineProps<ThisComponentProps>()
 const emit = defineEmits<ThisComponentEmits>()
 
+const defaultGlyph = '●'
+const defaultGlyphReplacementMap: Record<string, string> = {
+  '○': '●'
+}
+const glyphReplacementMap = defaultGlyphReplacementMap
+
+// const chars = '@◆●×v-~'
+// const nodeToCharMap =  Object.fromEntries(nodesToDraw.map(x => [ x.id, chars[Math.floor(Math.random() * chars.length)] ]))
+
+const nodeToCharMap =  Object.fromEntries(nodesToDraw.map(x => {
+  const originalGlyph = x.t
+  const replacement = originalGlyph ? glyphReplacementMap[originalGlyph] : defaultGlyph
+  const glyph = replacement ?? originalGlyph ?? defaultGlyph
+  return [ x.id,  glyph]
+}))
+
 </script>
 
 <template>
@@ -52,7 +75,14 @@ const emit = defineEmits<ThisComponentEmits>()
     </g>
   </g>
   <g class="pointer-events-none">
-    <circle v-for="nodeToDraw in nodesToDraw" :key="nodeToDraw.id" :cx="nodeToDraw.x" :cy="nodeToDraw.y" class="base jj-node" r="4" :color="colorMap[nodeToDraw.c % colorMap.length]"></circle>
+    <g v-for="nodeToDraw in nodesToDraw" :key="nodeToDraw.id">
+      <template v-if="useLogNodeMarkersOption">
+        <text :x="nodeToDraw.x" :y="nodeToDraw.y" class="base jj-node-text" :color="colorMap[nodeToDraw.c % colorMap.length]">{{ nodeToCharMap[nodeToDraw.id] }}</text>
+      </template>
+      <template v-else>
+        <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" class="base jj-node" r="4" :color="colorMap[nodeToDraw.c % colorMap.length]"></circle>
+      </template>
+     </g>
   </g>
   <g class="pointer-events-none">
     <g v-for="edgeToDraw in edgesToDraw" :key="edgeToDraw.id" v-memo="[ edgesToDraw, highlightedEdges.has(edgeToDraw.id) ]">
@@ -62,8 +92,13 @@ const emit = defineEmits<ThisComponentEmits>()
   </g>
   <g class="pointer-events-none">
     <g v-for="nodeToDraw in nodesToDraw" :key="nodeToDraw.id" v-memo="[ nodesToDraw, raisedNodeIds.includes(nodeToDraw.id), highlightedNodeIds.includes(nodeToDraw.id) ]">
-      <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" :class="{ highlighted: highlightedNodeIds.includes(nodeToDraw.id), raised: raisedNodeIds.includes(nodeToDraw.id) }" class="highlight jj-node-outline" r="6.5"></circle>
-      <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" :class="{ highlighted: highlightedNodeIds.includes(nodeToDraw.id), raised: raisedNodeIds.includes(nodeToDraw.id) }" class="highlight jj-node" r="4" :color="colorMap[nodeToDraw.c % colorMap.length]"></circle>
+      <template v-if="useLogNodeMarkersOption">
+        <text :x="nodeToDraw.x" :y="nodeToDraw.y" :class="{ highlighted: highlightedNodeIds.includes(nodeToDraw.id), raised: raisedNodeIds.includes(nodeToDraw.id) }" class="highlight jj-node-text" :color="colorMap[nodeToDraw.c % colorMap.length]">{{ nodeToCharMap[nodeToDraw.id] }}</text>
+      </template>
+      <template v-else>
+        <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" :class="{ highlighted: highlightedNodeIds.includes(nodeToDraw.id), raised: raisedNodeIds.includes(nodeToDraw.id) }" class="highlight jj-node-outline" r="6.5"></circle>
+        <circle :cx="nodeToDraw.x" :cy="nodeToDraw.y" :class="{ highlighted: highlightedNodeIds.includes(nodeToDraw.id), raised: raisedNodeIds.includes(nodeToDraw.id) }" class="highlight jj-node" r="4" :color="colorMap[nodeToDraw.c % colorMap.length]"></circle>
+      </template>
     </g>
   </g>
   <g class="pointer-events-visiblestroke">
@@ -87,7 +122,7 @@ const emit = defineEmits<ThisComponentEmits>()
 
 .jj-edge-fill,
 .jj-edge-stroke {
-  stroke-linecap: round;
+  stroke-linecap: none;
   fill: none;
 }
 
@@ -156,4 +191,51 @@ const emit = defineEmits<ThisComponentEmits>()
   fill: var(--jj-graph-highlight-color);
 }
 
+.jj-node-text {
+  paint-order: stroke;
+  text-anchor: middle;
+  dominant-baseline: central;
+
+  font-size: 20px;
+  font-size: calc(v-bind('logNodeMarkerSizeOption') * 1px);
+  font-weight: 700;
+  font-family: 'BundledCascadiaMono';
+}
+
+.jj-node-text {
+  fill: currentColor;
+  stroke-width: 3;
+  stroke: var(--jj-graph-bg-color);
+}
+
+.jj-node-text.highlight {
+  fill: none;
+  stroke: none;
+}
+
+.jj-node-text.highlight.raised {
+  fill: currentColor;
+  /* stroke-width: 7; */
+  stroke: var(--jj-graph-bg-color);
+}
+
+.jj-node-text.highlight.highlighted {
+  fill: currentColor;
+  stroke: var(--jj-graph-highlight-color);
+}
+
+.jj-node-text-outline {
+  fill: var(--jj-graph-bg-color);
+}
+
+.jj-node-text-outline.highlight {
+  fill: none;
+}
+
+.jj-node-text-outline.highlight.raised {
+  fill: var(--jj-graph-bg-color);
+}
+.jj-node-text-outline.highlight.highlighted {
+  fill: none;
+}
 </style>

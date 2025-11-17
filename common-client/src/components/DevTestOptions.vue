@@ -14,6 +14,7 @@ const repoSourceStore = useRepoSourceStore()
 
 const {
   parentLineCreationOption, nodeCreationOption, lazyBranchingOption, eagerMergingOption,
+  useLogNodeMarkersOption, logNodeMarkerSizeOption,
 } = storeToRefs(devTestOptionsStore)
 const { graphSource, knownGraphSources } = storeToRefs(repoSourceStore)
 
@@ -51,6 +52,12 @@ const { graphSource, knownGraphSources } = storeToRefs(repoSourceStore)
     <div class="form-row">
       <label>Eager Merging</label>
       <input type="checkbox" name="eagerMerging" v-model="eagerMergingOption"></input>
+    </div>
+    <div class="form-row">
+      <label>Log Node Markers</label>
+      <input type="checkbox" name="logNodeMarkers" v-model="useLogNodeMarkersOption"></input>
+      <label>Size</label>
+      <input type="number" name="logNodeMarkerSize" v-model="logNodeMarkerSizeOption"></input>
     </div>
   </form>
 </template>

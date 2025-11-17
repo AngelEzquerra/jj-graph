@@ -11,6 +11,8 @@ export const useDevTestOptionsStore = defineStore('devTestOptions', () => {
   const nodeCreationOption = ref<string>('existing')
   const lazyBranchingOption = ref<boolean>(false)
   const eagerMergingOption = ref<boolean>(false)
+  const useLogNodeMarkersOption = ref<boolean>(false)
+  const logNodeMarkerSizeOption = ref<number>(16)
 
   const opts = computed<NodeColumnGenOptions>(() => ({
     parentLineCreation: parentLineCreationOption.value as any,
@@ -21,5 +23,6 @@ export const useDevTestOptionsStore = defineStore('devTestOptions', () => {
 
   return {
     parentLineCreationOption, nodeCreationOption, lazyBranchingOption, eagerMergingOption, opts,
+    useLogNodeMarkersOption, logNodeMarkerSizeOption
   }
 })

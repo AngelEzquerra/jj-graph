@@ -22,6 +22,7 @@ export type JJGraphNode = {
   parents: Set<JJGraphRow>
   children: Set<JJGraphRow>
   data: string
+  nodeGlyph: string
 }
 
 export type JJGraphParseOutput = {
@@ -111,6 +112,7 @@ export function createJJGraphParserCurved(): JJGraphParser {
       // We need to process the graphRow to figure out which activeGraphChildren are in play for the next row
       type HorizontalBus = number
       let graphNodeColumn = -1
+      let graphNodeGlyph = ''
       let horizontalBus = 0
       const columnHorizontalBus: Map<JJGraphColumn, HorizontalBus> = new Map()
       const horizontalBusChildrenToPropagate: Map<HorizontalBus, Set<JJGraphRow>> = new Map()
@@ -120,6 +122,7 @@ export function createJJGraphParserCurved(): JJGraphParser {
         // If it isn't a graph glyph, then it's probably a node glyph - like ○, @, ◆ or ~
         if (!graphGlyphs.includes(currentChar)) {
           graphNodeColumn = column
+          graphNodeGlyph = currentChar
         }
 
         columnHorizontalBus.set(column, horizontalBus)
@@ -182,6 +185,7 @@ export function createJJGraphParserCurved(): JJGraphParser {
           originalRow: row,
           column: graphNodeColumn,
           originalColumn: graphNodeColumn,
+          nodeGlyph: graphNodeGlyph,
           data: dataPart,
           children,
           parents: new Set<JJGraphRow>(),

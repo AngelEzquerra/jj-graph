@@ -63,6 +63,7 @@ export type JJCommitGraphNodeData =
 
 export type JJCommitGraphNode = {
   id: NodeId
+  glyph: string
   data: JJCommitGraphNodeData
 
   // parents are effectively an ordered set
@@ -110,6 +111,7 @@ export function createJJCommitGraphParser(): JJCommitGraphParser {
       nodes.push({
         id: graphNode.row,
         data,
+        glyph: graphNode.nodeGlyph,
         // Will reorder parents in the subsequent section
         parents: [...graphNode.parents],
         children: [...graphNode.children],

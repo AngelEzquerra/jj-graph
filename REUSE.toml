@@ -32,3 +32,10 @@ path = [
 ]
 SPDX-FileCopyrightText = "NONE"
 SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = [
+  "client/src/assets/fonts/CascadiaMono.woff2",
+]
+SPDX-FileCopyrightText = "Copyright (c) 2019 - Present, Microsoft Corporation, with Reserved Font Name Cascadia Code."
+SPDX-License-Identifier = "OFL-1.1-RFN"

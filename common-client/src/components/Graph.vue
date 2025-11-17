@@ -332,6 +332,11 @@ watch(selectedCommits, (value) => {
 
 const graphWidth = computed(() => unit * graphColumnCount.value)
 
+const extraRows = 8
+const columnCount = 6
+
+const extraCells = Array(extraRows * columnCount).fill(0)
+
 </script>
 
 <template>
@@ -362,6 +367,9 @@ const graphWidth = computed(() => unit * graphColumnCount.value)
             @commit:preview="toggleCommitDetailsPreview(node.id)"
             @commit:closepreview="closeCommitDetailsPreview()"
           />
+        </div>
+        <div class="display-contents">
+          <div v-for="x in extraCells"></div>
         </div>
         <div class="graph-container pointer-events-none" @contextmenu="clearNodeSelection()">
           <svg xmlns="http://www.w3.org/2000/svg" class="graph-svg pointer-events-all" :width="graphWidth" :height="unit * commits.length">

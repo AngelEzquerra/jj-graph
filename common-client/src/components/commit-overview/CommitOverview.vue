@@ -22,6 +22,7 @@ type ThisComponentProps = {
   nodeData: JJCommitGraphNodeData
   color: string
   highlighted: boolean
+  fileHighlighted: boolean
   selected: boolean
 }
 
@@ -35,7 +36,7 @@ type ThisComponentEmits = {
   (e: 'commit:pin'): void
 }
 
-const { nodeData, color, selected, highlighted } = defineProps<ThisComponentProps>()
+const { nodeData, color, selected, highlighted, fileHighlighted } = defineProps<ThisComponentProps>()
 const emit = defineEmits<ThisComponentEmits>()
 
 </script>
@@ -44,7 +45,7 @@ const emit = defineEmits<ThisComponentEmits>()
   <div class="display-contents graph-row" :class="{ 'selected': selected }" @mouseenter="emit('mouseenter')" @mouseleave="emit('mouseleave')" @click.exact="emit('select:single')" @click.ctrl.exact="emit('select:multiple')" @click.meta.exact="emit('select:multiple')" @contextmenu.exact="emit('select:single')">
     <div class="display-contents" v-if="nodeData.type === 'commit'" @click.shift.exact="emit('commit:pin')" @click.exact="emit('commit:preview')">
       <div class="px-2 grid-cell"></div>
-      <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" /></div>
+      <div class="px-2 grid-cell node-description"><NodeDescription :node-data="nodeData" :color="color" :file-highlight="fileHighlighted" /></div>
       <div class="px-2 grid-cell"><pre>{{ nodeData.author.timestamp }}</pre></div>
       <div class="px-2 grid-cell"><span>{{ nodeData.author.name }}</span></div>
       <div class="px-2 grid-cell"><IdPrefix :id="nodeData.changeId" :prefix="nodeData.changeIdPrefixLen" :prefix-min="8" /></div>

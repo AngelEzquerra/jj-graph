@@ -13,6 +13,7 @@ import { computed, inject } from 'vue';
 type ThisComponentProps = {
   nodeData?: JJCommitGraphNodeData
   color?: string
+  fileHighlight?: boolean
 }
 
 type JJBookmark = {
@@ -21,7 +22,7 @@ type JJBookmark = {
   remotes: string[]
 }
 
-const { nodeData, color } = defineProps<ThisComponentProps>()
+const { nodeData, color, fileHighlight } = defineProps<ThisComponentProps>()
 
 const bookmarks = computed<JJBookmark[]>(() => {
   if (nodeData?.type !== 'commit') {
@@ -70,6 +71,7 @@ const interactionCtx = inject(GRAPH_INTERACTION_CTX_IK)!
   <template v-if="nodeData">
     <template v-if="nodeData.type === 'commit'">
       <span v-if="nodeData.isWorkingCopy" class="chip chip-content">@</span>
+      <span v-if="fileHighlight" class="chip chip-content">F</span>
       <span v-if="nodeData.isEmpty" class="chip chip-content">empty</span>
       <template v-if="bookmarks?.length > 0">
         <span v-for="b in bookmarks" class="bookmark" @contextmenu="interactionCtx.setBookmarkContext(b.name)">

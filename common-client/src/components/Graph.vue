@@ -330,6 +330,34 @@ watch(selectedCommits, (value) => {
   emit('commitSelection', value)
 })
 
+const selectedCommitFiles = computed(() => {
+  const sCommits = selectedCommits.value
+  return sCommits.flatMap(x => x.diffSummaryFiles.flatMap(x => [ x.source.path, x.target.path ])).filter((x, i, arr) => arr.indexOf(x) === i)
+})
+
+const commitIdsThatModifySelectedCommitFiles = computed(() => {
+  const scFiles = selectedCommitFiles.value
+  return (
+    commits
+      .filter(x => {
+        const data = x.data
+        if (data?.type !== 'commit') {
+          return false
+        }
+        return data.diffSummaryFiles.some(x => {
+          if (scFiles.includes(x.target.path)) {
+            return true
+          }
+          if (x.source.path !== x.target.path) {
+            return scFiles.includes(x.source.path)
+          }
+          return false
+        })
+      })
+      .map(x => x.id)
+  )
+})
+
 const graphWidth = computed(() => unit * graphColumnCount.value)
 
 const extraRows = 8
@@ -353,11 +381,12 @@ const extraCells = Array(extraRows * columnCount).fill(0)
         <div class="display-contents">
           <CommitOverview
             v-for="(node, r) in commits"
-            v-memo="[ commits, nodesToDraw, highlightedNodeId === r, selectedNodeIds.includes(r) ]"
+            v-memo="[ commits, nodesToDraw, highlightedNodeId === r, selectedNodeIds.includes(r), commitIdsThatModifySelectedCommitFiles.includes(r) ]"
             :key="r"
             :node-data="node.data!"
             :color="colorMap[nodesToDraw[r]!.c % colorMap.length]!"
             :highlighted="highlightedNodeId === r"
+            :file-highlighted="commitIdsThatModifySelectedCommitFiles.includes(r)"
             :selected="selectedNodeIds.includes(r)"
             @mouseenter="highlightNode(node.id)"
             @mouseleave="removeNodeHighlight"

@@ -43,19 +43,43 @@ export function activate(context: vscode.ExtensionContext) {
     },
   }
 
+  const openPanels: vscode.WebviewPanel[] = []
+  function createJJGraphPanel() {
+    const panel = prepareWebView(context);
+    panel.webview.onDidReceiveMessage(
+        async (message) => {
+            const response = await handleRequest(message, ip)
+            panel.webview.postMessage(response)
+        },
+        undefined,
+        context.subscriptions
+    );
+    openPanels.push(panel)
+    context.subscriptions.push(panel.onDidDispose(() => {
+      const indexOfPanel = openPanels.findIndex(x => x === panel)
+      if (indexOfPanel >= 0) {
+        openPanels.splice(indexOfPanel, 1)
+      }
+    }))
+  }
+
+  function showOrCreateJJGraphPanel() {
+    if (openPanels.length > 0 && openPanels[0]) {
+      const existingPanel = openPanels[0]
+      existingPanel.reveal(existingPanel.viewColumn)
+    } else {
+      createJJGraphPanel()
+    }
+  }
+
   context.subscriptions.push(vscode.commands.registerCommand(
     'vscode-jj-graph.openNewTab',
-    () => {
-      const panel = prepareWebView(context);
-      panel.webview.onDidReceiveMessage(
-          async (message) => {
-              const response = await handleRequest(message, ip)
-              panel.webview.postMessage(response)
-          },
-          undefined,
-          context.subscriptions
-      );
-    }
+    () => createJJGraphPanel()
+  ));
+
+  context.subscriptions.push(vscode.commands.registerCommand(
+    'vscode-jj-graph.showOrCreateTab',
+    () => showOrCreateJJGraphPanel()
   ));
 
   const jjCbPlatformPathMap: PlatformSpecificMap<string>  = {
@@ -89,6 +113,7 @@ function prepareWebView(context: vscode.ExtensionContext) {
         "JJ Graph",
         vscode.ViewColumn.One,
         {
+            enableFindWidget: true,
             enableScripts: true,
             retainContextWhenHidden: true,
             localResourceRoots: [

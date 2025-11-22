@@ -33,7 +33,12 @@
       {
         "category": "JJ Graph",
         "command": "vscode-jj-graph.openNewTab",
-        "title": "JJ Graph (new tab)",
+        "title": "JJ Graph (new tab)"
+      },
+      {
+        "category": "JJ Graph",
+        "command": "vscode-jj-graph.showOrCreateTab",
+        "title": "JJ Graph",
         "icon": {
           "light": "resources/cmd-icon-light.svg",
           "dark": "resources/cmd-icon-dark.svg"
@@ -43,8 +48,14 @@
     "menus": {
       "editor/title": [
         {
-          "command": "vscode-jj-graph.openNewTab",
+          "command": "vscode-jj-graph.showOrCreateTab",
           "group": "navigation"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "vscode-jj-graph.openNewTab",
+          "group": "inline"
         }
       ]
     }

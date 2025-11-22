@@ -69,9 +69,11 @@ export async function invokeJJDiff(repoPath: string, commitId: string, toolPath:
     `--tool=jjcb`,
     `--no-pager`,
     `--config`,
-    `merge-tools.jjcb.program="${toolPath}"`,
+    // The string value needs to be TOML stringified, or it will not work with Windows paths
+    `merge-tools.jjcb.program=${JSON.stringify(toolPath)}`,
     `--config`,
-    `merge-tools.jjcb.diff-args=["${terminationPath}", "$left", "$right"]`,
+    // The string value needs to be TOML stringified, or it will not work with Windows paths
+    `merge-tools.jjcb.diff-args=[${JSON.stringify(terminationPath)}, "$left", "$right"]`,
   ]), { resolveOnFirstNewline: true })
   return stdio.trim()
 }

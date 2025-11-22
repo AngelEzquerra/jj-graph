@@ -2,7 +2,7 @@
   "name": "vscode-jj-graph",
   "displayName": "JJ Graph",
   "description": "GUI for Jujutsu (`jj`) VCS",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "Velociraptor115",
   "license": "Apache-2.0",
   "keywords": [

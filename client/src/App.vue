@@ -269,9 +269,6 @@ function handleSelectionCancel() {
     </dialog>
     <DevTestOptions />
     <div class="flex m-4">
-      <!-- <label>Revset</label>
-      <span :class="{ 'hidden': !revsetInputLoading }"><LoaderCircle :size="12" class="spin" /></span>
-      <input type="text" v-model="revsetInput" placeholder="Revset" :size="revsetInput?.length" class="revset-input" /> -->
       <UInput v-model="revsetInput" placeholder="Revset" :loading="revsetInputLoading" icon="i-lucide-list-filter"  />
       <div class="grow"></div>
       <UColorModeButton />
@@ -307,25 +304,4 @@ function handleSelectionCancel() {
 .revset-input {
   width: fit-content;
 }
-</style>
-
-<style>
-
-.hidden {
-  visibility: hidden;
-}
-
-.spin {
-  animation: anim-spin 1s linear infinite;
-}
-
-@keyframes anim-spin {
-  0% {
-      transform: rotate(0deg);
-  }
-  100% {
-      transform: rotate(360deg);
-  }
-}
-
 </style>

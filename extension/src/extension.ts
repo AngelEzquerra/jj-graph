@@ -153,7 +153,7 @@ function prepareWebView(context: vscode.ExtensionContext) {
     <link rel="stylesheet" crossorigin href="${dependencyList[0]}">
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app" class="isolate"></div>
   </body>
 </html>`;
     panel.webview.html = html;

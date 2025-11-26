@@ -59,8 +59,8 @@ function computedL<T>(log: string, f: () => T) {
 
 const renderData = computedL('renderData', () => renderLogic(commits, opts))
 const graphColumnCount = computedL('graphColumnCount', () => renderData.value[0] + 1)
-const nodesToDraw = computedL('nodesToDraw', () => renderData.value[1].map(x => ({ ...x, uiBaseId: `bn_${x.id}`, uiHighlightId: `hn_${x.id}`})))
-const edgesToDraw = computedL('edgesToDraw', () => renderData.value[2].map(x => ({ ...x, uiBaseId: `be_${x.id}`, uiHighlightId: `he_${x.id}`})))
+const nodesToDraw = computedL('nodesToDraw', () => renderData.value[1].map(x => ({ ...x, data: commits[x.id]?.data })))
+const edgesToDraw = computedL('edgesToDraw', () => renderData.value[2])
 
 const highlightedNodeId = ref<NodeId>()
 const highlightedEdgeId = ref<EdgeId>()

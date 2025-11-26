@@ -114,6 +114,7 @@ function refreshLatestOperationId() {
 }
 
 effect(refreshLog)
+effect(refreshLatestOperationId)
 
 let latestOperationIdWatcherHandle: NodeJS.Timeout
 

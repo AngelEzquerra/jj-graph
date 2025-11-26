@@ -278,6 +278,10 @@ function handleSelectionCancel() {
         </template>
       </UPopover>
       <UColorModeButton />
+      <div class="grow"></div>
+      <div class="flex gap-2 items-center select-none">
+        <pre>Current Operation:</pre><IdPrefix :id="latestOperationId ?? ''" :prefix="0" :prefix-min="12" />
+      </div>
     </div>
     <div class="flex m-4">
       <UInput v-model="revsetInput" placeholder="Revset" :loading="revsetInputLoading" icon="i-lucide-list-filter"  />

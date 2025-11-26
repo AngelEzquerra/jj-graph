@@ -256,7 +256,7 @@ function handleSelectionCancel() {
 </script>
 
 <template>
-  <UApp>
+  <UApp :toaster="{ position: 'top-center', duration: 1200, }">
     <dialog class="modal-dialog" ref="loadingDialog">
       <div>Loading</div>
     </dialog>

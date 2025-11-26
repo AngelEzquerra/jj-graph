@@ -267,11 +267,19 @@ function handleSelectionCancel() {
         </div>
       </form>
     </dialog>
-    <DevTestOptions />
+    <div class="flex flex-row-reverse mx-4 my-2">
+      <UPopover>
+        <UButton icon="i-lucide-bolt" color="neutral" variant="ghost" />
+        <template #content>
+          <div class="p-2">
+            <DevTestOptions />
+          </div>
+        </template>
+      </UPopover>
+      <UColorModeButton />
+    </div>
     <div class="flex m-4">
       <UInput v-model="revsetInput" placeholder="Revset" :loading="revsetInputLoading" icon="i-lucide-list-filter"  />
-      <div class="grow"></div>
-      <UColorModeButton />
     </div>
     <div v-if="graphMode !== 'normal'">
       <!-- <label>Mode: {{ graphMode }}</label> -->

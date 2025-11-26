@@ -45,12 +45,16 @@ const DESCRIPTION_TEXT_NOT_SET = '(no description set)'
 const DESCRIPTION_TEXT_ELIDED = '(elided revisions)'
 const DESCRIPTION_TEXT_ONLY_COMMIT_ID = '(only commit_id found)'
 
+const LF_REPLACEMENT_CHAR = '\u23CE'
+// const LF_REPLACEMENT_CHAR = '\u2424'
+const CR_REPLACEMENT_CHAR = '\u240D'
+
 const descriptionText = computed(() => {
   if (nodeData?.type === 'commit') {
     if (nodeData.commitId.split('').every(x => x === '0')) {
       return DESCRIPTION_TEXT_ROOT
     } else if (nodeData.description) {
-      return nodeData.description
+      return nodeData.description.trimEnd().replace(/\n/g, LF_REPLACEMENT_CHAR).replace(/\r/g, CR_REPLACEMENT_CHAR)
     } else {
       return DESCRIPTION_TEXT_NOT_SET
     }

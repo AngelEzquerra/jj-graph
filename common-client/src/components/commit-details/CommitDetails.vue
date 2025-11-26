@@ -55,8 +55,12 @@ const emit = defineEmits<ThisComponentEmits>()
             </template>
             <span>Author</span><span>{{ nodeData.author.name }} &lt;<a :href="`mailto:${nodeData.author.email}`">{{ nodeData.author.email }}</a>&gt;</span>
             <span>Author Timestamp</span><pre>{{ nodeData.author.timestamp }}</pre>
-            <span>Committer</span><span>{{ nodeData.committer.name }} &lt;<a :href="`mailto:${nodeData.committer.email}`">{{ nodeData.committer.email }}</a>&gt;</span>
-            <span>Committer Timestamp</span><pre>{{ nodeData.committer.timestamp }}</pre>
+            <template v-if="nodeData.committer.name !== nodeData.author.name || nodeData.committer.email !== nodeData.author.email">
+              <span>Committer</span><span>{{ nodeData.committer.name }} &lt;<a :href="`mailto:${nodeData.committer.email}`">{{ nodeData.committer.email }}</a>&gt;</span>
+            </template>
+            <template v-if="nodeData.committer.timestamp !== nodeData.author.timestamp">
+              <span>Committer Timestamp</span><pre>{{ nodeData.committer.timestamp }}</pre>
+            </template>
           </div>
           <br />
           <div class="commit-meta-desc">{{ nodeData.description }}</div>
